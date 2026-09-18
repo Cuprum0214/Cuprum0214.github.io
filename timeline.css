@@ -1,0 +1,8 @@
+/* ============ 经历时间轴：阶段图标 ============ */
+.t-item .role{display:flex;align-items:center;gap:10px}
+.t-item .stage-icon{
+  width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;
+  flex-shrink:0;border-radius:10px;background:rgba(120,150,255,.1);
+  border:1px solid var(--card-border);font-size:1.15rem;
+  box-shadow:0 0 14px rgba(34,211,238,.12);
+}
