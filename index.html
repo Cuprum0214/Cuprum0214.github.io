@@ -77,8 +77,100 @@ header.topbar{position:fixed;top:0;left:0;right:0;z-index:50;backdrop-filter:blu
 /* ============ Hero ============ */
 .hero{min-height:100vh;display:flex;align-items:center;justify-content:center;padding-top:64px;position:relative;text-align:center}
 .hero-inner{max-width:840px;padding:40px 0}
-.avatar{width:140px;height:140px;border-radius:50%;margin:0 auto 22px;padding:4px;background:linear-gradient(135deg,var(--cyan),var(--violet));box-shadow:var(--shadow-cyan)}
-.avatar img{width:100%;height:100%;border-radius:50%;object-fit:cover;background:#0b1122}
+/* ============ 个人签名（替代头像）：玻璃质感 + 科技感 + 激光流动 ============ */
+.sig{
+  position:relative;display:inline-flex;align-items:center;justify-content:center;
+  border-radius:16px;overflow:hidden;isolation:isolate;
+  background:
+    linear-gradient(135deg,rgba(255,255,255,.15),rgba(255,255,255,.03) 46%,rgba(140,200,255,.07)),
+    rgba(12,20,38,.42);
+  border:1px solid rgba(170,220,255,.22);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.38),
+    inset 0 -20px 32px -24px rgba(120,200,255,.6),
+    0 10px 30px rgba(2,8,22,.55),
+    0 0 26px rgba(34,211,238,.18);
+  backdrop-filter:blur(14px) saturate(160%);
+  -webkit-backdrop-filter:blur(14px) saturate(160%);
+  animation:sigBreathe 5.4s ease-in-out infinite;
+}
+/* 玻璃内的细网格（科技感底纹） */
+.sig::before{
+  content:"";position:absolute;inset:0;pointer-events:none;opacity:.55;
+  background-image:
+    linear-gradient(rgba(150,220,255,.11) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(150,220,255,.11) 1px,transparent 1px);
+  background-size:14px 14px;
+  -webkit-mask-image:radial-gradient(120% 95% at 50% 50%,#000 32%,transparent 80%);
+  mask-image:radial-gradient(120% 95% at 50% 50%,#000 32%,transparent 80%);
+}
+/* 四角科技切角 */
+.sig::after{
+  content:"";position:absolute;inset:5px;border-radius:10px;pointer-events:none;
+  background:
+    linear-gradient(rgba(140,230,255,.8),rgba(140,230,255,.8)) 0 0/14px 1px no-repeat,
+    linear-gradient(rgba(140,230,255,.8),rgba(140,230,255,.8)) 0 0/1px 14px no-repeat,
+    linear-gradient(rgba(140,230,255,.8),rgba(140,230,255,.8)) 100% 0/14px 1px no-repeat,
+    linear-gradient(rgba(140,230,255,.8),rgba(140,230,255,.8)) 100% 0/1px 14px no-repeat,
+    linear-gradient(rgba(140,230,255,.8),rgba(140,230,255,.8)) 0 100%/14px 1px no-repeat,
+    linear-gradient(rgba(140,230,255,.8),rgba(140,230,255,.8)) 0 100%/1px 14px no-repeat,
+    linear-gradient(rgba(140,230,255,.8),rgba(140,230,255,.8)) 100% 100%/14px 1px no-repeat,
+    linear-gradient(rgba(140,230,255,.8),rgba(140,230,255,.8)) 100% 100%/1px 14px no-repeat;
+}
+.sig-txt{
+  position:relative;z-index:2;display:inline-flex;align-items:center;white-space:nowrap;
+  font-family:ui-monospace,"Cascadia Mono",Consolas,"SFMono-Regular",monospace;
+  font-weight:700;letter-spacing:.14em;
+  background:linear-gradient(180deg,#ffffff 0%,#dcf7ff 34%,#8ce6ff 62%,#a78bfa 100%);
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+  filter:drop-shadow(0 0 10px rgba(80,200,255,.5));
+}
+.sig-txt i{
+  font-style:normal;margin:0 .30em;opacity:.8;
+  -webkit-text-fill-color:#9ad9ff;filter:drop-shadow(0 0 8px rgba(34,211,238,.9));
+}
+/* 激光流动：一道青蓝主光 + 一道紫色副光（副光压在字上） */
+.sig-laser{
+  position:absolute;top:-45%;bottom:-45%;left:0;width:36%;z-index:1;pointer-events:none;
+  background:linear-gradient(100deg,transparent,rgba(140,235,255,.06) 28%,rgba(200,250,255,.6) 50%,rgba(120,200,255,.10) 72%,transparent);
+  filter:blur(5px);mix-blend-mode:screen;
+  transform:translateX(-180%) skewX(-18deg);
+  animation:sigLaser 3.8s cubic-bezier(.45,.05,.55,.95) infinite;
+}
+.sig-laser.v2{
+  width:20%;z-index:3;filter:blur(8px);mix-blend-mode:screen;
+  background:linear-gradient(100deg,transparent,rgba(167,139,250,.55) 50%,transparent);
+  animation-duration:5.6s;animation-delay:1.15s;
+}
+@keyframes sigLaser{
+  0%{transform:translateX(-180%) skewX(-18deg)}
+  58%{transform:translateX(330%) skewX(-18deg)}
+  100%{transform:translateX(330%) skewX(-18deg)}
+}
+@keyframes sigBreathe{
+  50%{box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.38),
+    inset 0 -20px 32px -24px rgba(120,200,255,.6),
+    0 10px 30px rgba(2,8,22,.55),
+    0 0 40px rgba(34,211,238,.34)}
+}
+/* 大号（首屏头像位） */
+.sig.lg{display:flex;width:max-content;max-width:min(90vw,460px);margin:0 auto 24px;padding:22px 36px;border-radius:20px}
+.sig.lg .sig-txt{font-size:clamp(1.5rem,4.2vw,2.35rem)}
+/* 小号（聊天头部） */
+.sig.sm{width:auto;padding:7px 12px;border-radius:12px;flex:0 0 auto}
+.sig.sm .sig-txt{font-size:.8rem;letter-spacing:.12em}
+.sig.sm::after{inset:4px;border-radius:8px}
+/* 迷你号（对话气泡旁） */
+.sig.xs{width:44px;height:34px;padding:0;border-radius:10px;flex:0 0 auto}
+.sig.xs .sig-txt{font-size:.72rem;letter-spacing:.06em}
+.sig.xs::after{inset:3px;border-radius:7px}
+/* ============ 猫爪线稿简笔画（替代原「王童」大标题）：线稿颜色随主题色变化 ============ */
+.paw{display:flex;justify-content:center;margin:6px auto 10px;color:var(--accent)}
+.paw svg{height:clamp(90px,13vw,132px);width:auto;overflow:visible;display:block;
+  filter:drop-shadow(0 0 10px color-mix(in srgb,var(--accent) 45%,transparent));
+  transition:filter .3s,color .3s}
+.paw path,.paw circle,.paw ellipse{stroke:currentColor}
 .hero .badge{display:inline-flex;align-items:center;gap:8px;margin:6px auto 18px;padding:7px 16px;border-radius:999px;font-size:.85rem;color:var(--muted);border:1px solid var(--card-border);background:var(--card)}
 .hero .badge::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--cyan);box-shadow:0 0 10px var(--cyan);animation:pulse 1.8s infinite}
 @keyframes pulse{50%{opacity:.35}}
@@ -176,8 +268,7 @@ section{padding:92px 0}
 .chat-wrap{max-width:720px;margin:0 auto}
 .chat-box{background:var(--card);border:1px solid var(--card-border);border-radius:20px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);overflow:hidden;display:flex;flex-direction:column;height:620px}
 .chat-head{display:flex;align-items:center;gap:14px;padding:16px 20px;border-bottom:1px solid var(--line)}
-.chat-head .ava{width:44px;height:44px;border-radius:50%;padding:2px;background:linear-gradient(135deg,var(--cyan),var(--violet))}
-.chat-head .ava img{width:100%;height:100%;border-radius:50%;object-fit:cover}
+.chat-head .sig.sm{align-self:center}
 .chat-head .who{flex:1}
 .chat-head .who .n{font-weight:700}
 .chat-head .who .s{font-size:.78rem;color:var(--muted)}
@@ -188,9 +279,8 @@ section{padding:92px 0}
 .msg .bubble{background:rgba(120,150,255,.08);border:1px solid var(--card-border);padding:12px 16px;border-radius:16px;font-size:.95rem;line-height:1.65}
 .msg.user{align-self:flex-end;flex-direction:row-reverse}
 .msg.user .bubble{background:linear-gradient(120deg,rgba(34,211,238,.2),rgba(59,130,246,.18));border-color:rgba(34,211,238,.3)}
-.msg .mini-ava{width:34px;height:34px;border-radius:50%;flex-shrink:0;padding:2px;background:linear-gradient(135deg,var(--cyan),var(--violet))}
-.msg .mini-ava img{width:100%;height:100%;border-radius:50%;object-fit:cover}
-.msg .mini-ava.inv{visibility:hidden}
+.msg .mini-ava{flex-shrink:0}
+.msg .mini-ava.inv{visibility:hidden;width:44px;height:34px}
 .msg .bubble .who{font-size:.72rem;color:var(--violet);margin-bottom:3px;font-weight:700}
 .msg.typing .bubble{display:flex;gap:6px;align-items:center;padding:14px 18px}
 .msg.typing .dot{width:7px;height:7px;border-radius:50%;background:var(--muted);animation:tp 1.2s infinite}
@@ -356,6 +446,8 @@ audio#bgm{display:none}
   #boot{display:none}
   body.booting{overflow:auto}
   body.booting #page{opacity:1;filter:none;transform:none}
+  .sig,.sig-laser{animation:none}
+  .sig-laser{display:none}
 }
 </style>
 </head>
@@ -437,9 +529,26 @@ audio#bgm{display:none}
 <!-- ====== Hero ====== -->
 <section class="hero" id="home">
   <div class="hero-inner">
-    <div class="avatar"><img id="hero-avatar" src="images/avatar.jpg" alt="头像" /></div>
+    <!-- 个人签名（原头像位）：玻璃质感 + 科技感字体 + 激光流动 -->
+    <div class="sig lg" role="img" aria-label="个人签名：王童 | Cuprum">
+      <span class="sig-txt">王童<i>|</i>Cuprum</span>
+      <i class="sig-laser"></i><i class="sig-laser v2"></i>
+    </div>
     <div class="badge" id="hero-badge">🎓 学生 · 天津 / 广东 · 深圳</div>
-    <h1 id="hero-name">王童</h1>
+    <!-- 猫爪线稿简笔画（替代原「王童」大标题）：由参考图轮廓矢量化得到的纯 path 线稿，
+         未内嵌任何图片；描边用 currentColor，由 CSS 的 --accent（主题色）驱动 -->
+    <div class="paw" role="img" aria-label="猫爪线稿简笔画">
+      <svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="2.45" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M38.2 22.2C38.7 22.2 40.1 21.9 41.1 22.0C42.1 22.1 43.1 22.3 44.4 22.8C45.7 23.3 47.6 24.2 48.8 24.9C50.0 25.7 51.0 26.9 51.8 27.5C52.5 28.0 52.7 28.1 53.2 28.2C53.7 28.3 53.5 28.4 54.7 27.8C55.9 27.3 58.4 25.7 60.2 25.0C62.0 24.4 64.2 24.0 65.7 23.8C67.2 23.7 68.2 24.0 69.4 24.4C70.6 24.7 71.9 25.2 73.1 25.9C74.2 26.7 75.4 27.8 76.3 29.0C77.2 30.2 78.0 31.6 78.5 33.0C79.0 34.4 79.2 36.1 79.3 37.4C79.4 38.8 78.9 40.3 78.9 41.1C78.9 41.9 78.3 41.8 79.3 42.5C80.2 43.1 83.4 44.3 84.8 45.1C86.2 46.0 86.8 46.6 87.8 47.7C88.8 48.9 90.1 50.8 90.8 52.1C91.5 53.4 91.8 54.2 92.0 55.4C92.1 56.7 92.2 58.1 92.0 59.5C91.7 60.8 91.2 62.1 90.3 63.5C89.4 64.9 88.4 66.5 86.7 67.8C84.9 69.2 80.9 70.4 79.6 71.7C78.4 73.0 79.3 74.5 79.1 75.6C78.9 76.8 78.7 77.4 78.2 78.6C77.6 79.7 76.7 81.5 76.0 82.6C75.3 83.7 74.9 84.3 74.0 85.2C73.2 86.1 72.1 87.1 70.9 88.0C69.7 88.9 68.3 89.9 66.8 90.6C65.3 91.3 64.1 91.9 62.0 92.4C60.0 92.9 56.7 93.4 54.7 93.7C52.7 94.0 52.6 94.3 49.9 94.0C47.2 93.7 41.6 92.7 38.5 92.0C35.5 91.2 33.5 90.2 31.6 89.3C29.6 88.4 28.2 87.5 26.8 86.4C25.4 85.4 24.3 84.2 23.3 83.0C22.3 81.7 21.4 80.3 20.9 78.9C20.3 77.6 19.9 76.4 19.8 74.9C19.7 73.4 20.4 71.1 20.4 70.1C20.5 69.2 20.9 69.6 20.2 69.1C19.5 68.5 17.4 67.8 16.1 66.9C14.8 65.9 13.4 64.6 12.4 63.5C11.4 62.4 10.7 61.4 10.0 60.2C9.4 59.0 8.9 57.5 8.6 56.2C8.2 54.9 8.0 53.6 8.0 52.5C8.0 51.4 8.3 50.5 8.6 49.6C8.9 48.6 9.2 47.7 9.8 46.6C10.4 45.6 11.3 44.2 12.1 43.3C12.8 42.4 13.4 42.0 14.3 41.3C15.2 40.6 15.9 39.9 17.6 39.2C19.3 38.4 23.0 38.2 24.4 36.9C25.8 35.6 25.2 32.9 25.9 31.2C26.7 29.5 27.8 28.0 29.1 26.8C30.3 25.5 31.9 24.5 33.4 23.7C34.8 23.0 37.0 22.5 37.8 22.3C38.6 22.0 37.6 22.3 38.2 22.2Z"/>
+        <path d="M49.6 53.1C50.1 53.0 51.6 52.8 52.5 52.9C53.3 52.9 53.8 53.0 54.7 53.3C55.6 53.6 56.6 54.0 57.6 54.6C58.7 55.2 59.8 55.7 60.9 56.7C62.1 57.7 63.6 59.3 64.5 60.6C65.4 61.9 65.9 63.5 66.4 64.6C66.9 65.8 67.1 66.3 67.3 67.6C67.4 68.8 67.5 71.2 67.3 72.3C67.2 73.5 67.0 73.7 66.6 74.5C66.2 75.4 65.6 76.5 64.8 77.5C63.9 78.4 63.0 79.3 61.7 80.1C60.3 80.9 58.2 82.0 56.5 82.5C54.9 83.1 53.2 83.2 51.8 83.3C50.3 83.5 49.4 83.5 48.1 83.3C46.8 83.2 45.4 83.0 44.0 82.7C42.7 82.4 41.2 81.9 40.0 81.5C38.8 81.1 37.9 80.6 37.1 80.1C36.3 79.6 35.8 79.2 35.2 78.6C34.7 78.0 34.0 77.2 33.6 76.4C33.2 75.5 32.7 74.6 32.6 73.4C32.4 72.3 32.6 70.6 32.8 69.4C33.0 68.2 33.0 67.9 33.8 66.5C34.5 65.0 36.1 62.1 37.2 60.6C38.3 59.1 39.4 58.3 40.4 57.4C41.4 56.6 41.8 56.1 43.3 55.4C44.8 54.7 48.1 53.6 49.2 53.2C50.2 52.8 49.0 53.1 49.6 53.1Z"/>
+        <path d="M19.1 12.3C19.4 12.4 20.4 12.3 20.9 12.6C21.4 12.9 21.8 12.9 22.3 14.0C22.7 15.1 23.3 17.9 23.5 19.1C23.7 20.2 23.5 20.4 23.4 20.9C23.3 21.4 23.6 21.3 22.9 21.8C22.3 22.4 20.4 23.7 19.4 24.2C18.5 24.6 18.1 24.6 17.2 24.6C16.3 24.6 14.9 24.5 13.9 24.2C13.0 23.9 12.1 23.3 11.5 22.7C10.9 22.1 10.5 21.1 10.5 20.5C10.4 19.9 10.7 19.5 11.0 19.1C11.3 18.6 11.6 18.1 12.5 17.7C13.3 17.3 15.2 17.5 16.0 16.9C16.8 16.3 16.7 14.7 17.2 13.9C17.6 13.2 18.4 12.8 18.7 12.5C19.0 12.2 18.7 12.3 19.1 12.3Z"/>
+        <path d="M26.4 46.8C26.8 46.8 27.6 46.7 28.2 46.8C28.9 46.9 29.5 47.1 30.1 47.6C30.7 48.0 31.6 49.0 32.0 49.6C32.4 50.1 32.5 50.4 32.6 51.0C32.6 51.6 32.4 52.6 32.2 53.2C32.0 53.9 31.8 54.4 31.3 55.1C30.8 55.7 29.9 56.8 29.2 57.3C28.6 57.8 28.2 58.0 27.5 58.2C26.9 58.4 26.0 58.4 25.3 58.3C24.6 58.2 23.7 57.9 23.1 57.4C22.5 56.9 21.9 56.1 21.5 55.4C21.1 54.7 20.8 54.0 20.8 53.2C20.8 52.5 21.1 51.7 21.4 51.0C21.7 50.3 22.1 49.7 22.6 49.2C23.0 48.6 23.6 48.1 24.2 47.7C24.8 47.3 25.7 47.1 26.0 46.9C26.4 46.8 26.0 46.9 26.4 46.8Z"/>
+        <path d="M41.5 31.8C41.9 31.8 43.0 31.7 43.7 31.9C44.4 32.2 45.2 32.6 45.8 33.2C46.5 33.8 47.2 34.8 47.6 35.6C47.9 36.4 48.1 37.1 48.1 37.8C48.1 38.5 47.9 39.0 47.6 39.6C47.3 40.2 46.8 40.9 46.2 41.5C45.7 42.0 45.0 42.5 44.4 42.8C43.8 43.2 43.2 43.4 42.6 43.6C42.0 43.7 41.4 43.8 40.7 43.6C40.1 43.4 39.2 43.0 38.5 42.5C37.9 41.9 37.1 41.1 36.6 40.4C36.2 39.7 36.0 38.8 36.0 38.2C35.9 37.5 36.0 36.9 36.2 36.3C36.4 35.7 36.7 35.1 37.2 34.5C37.7 33.9 38.6 33.0 39.3 32.6C39.9 32.2 40.7 32.0 41.1 31.9C41.5 31.7 41.0 31.8 41.5 31.8Z"/>
+        <path d="M63.9 34.7C64.2 34.7 65.0 34.7 65.7 35.0C66.4 35.3 67.6 36.0 68.2 36.5C68.9 37.0 69.2 37.5 69.6 38.2C69.9 38.8 70.2 39.7 70.3 40.4C70.4 41.0 70.3 41.6 70.1 42.2C69.9 42.8 69.5 43.5 69.0 44.0C68.5 44.6 67.8 45.3 67.2 45.7C66.6 46.1 66.0 46.3 65.3 46.5C64.7 46.6 63.9 46.7 63.1 46.5C62.4 46.4 61.6 46.0 60.9 45.6C60.3 45.1 59.5 44.4 59.1 43.7C58.6 43.0 58.3 42.1 58.2 41.5C58.0 40.9 57.9 40.7 58.1 40.0C58.3 39.3 58.8 38.1 59.3 37.4C59.8 36.8 60.2 36.3 60.9 35.9C61.6 35.5 63.0 35.0 63.5 34.8C64.0 34.6 63.5 34.7 63.9 34.7Z"/>
+        <path d="M74.5 50.9C74.9 50.9 75.8 50.7 76.4 50.8C76.9 50.8 77.3 51.0 77.8 51.3C78.4 51.7 79.1 52.2 79.6 52.9C80.1 53.5 80.5 54.4 80.7 55.1C81.0 55.7 81.0 56.4 81.0 56.9C81.0 57.4 81.0 57.5 80.7 58.0C80.4 58.5 79.8 59.3 79.3 59.7C78.8 60.2 78.5 60.4 77.8 60.6C77.2 60.8 76.3 61.0 75.6 61.0C75.0 61.0 74.3 60.8 73.8 60.5C73.3 60.3 72.9 60.0 72.4 59.5C72.0 58.9 71.4 57.9 71.2 57.3C70.9 56.7 70.8 56.4 70.9 55.8C70.9 55.2 71.1 54.3 71.4 53.6C71.8 52.9 72.3 52.3 72.7 51.9C73.2 51.4 73.9 51.2 74.2 51.0C74.5 50.9 74.2 51.0 74.5 50.9Z"/>
+        <path d="M52.9 6.1C53.1 6.1 53.6 5.9 54.0 6.0C54.3 6.1 54.7 6.2 55.0 6.4C55.3 6.6 55.6 7.0 55.8 7.3C56.0 7.6 56.2 7.6 56.0 8.4C55.7 9.2 55.0 11.0 54.4 12.1C53.9 13.1 53.2 14.3 52.6 14.7C52.1 15.1 51.9 15.0 51.0 14.7C50.1 14.4 48.2 13.4 47.4 12.9C46.5 12.4 46.4 12.2 46.1 11.7C45.8 11.3 45.5 10.7 45.4 10.3C45.3 9.8 45.5 9.5 45.7 9.1C45.9 8.8 45.9 8.4 46.6 8.4C47.3 8.3 48.9 9.0 49.9 8.6C50.9 8.3 52.0 6.7 52.5 6.3C53.0 5.8 52.6 6.1 52.9 6.1Z"/>
+      </svg>
+    </div>
     <div class="aka">aka <b>Cuprum</b> · 水瓶座 · INTJ-A</div>
     <p class="tagline" id="hero-tagline">这个人很懒，什么也没有留下～</p>
     <div class="type-wrap"><span id="type"></span><span class="cursor"></span></div>
@@ -531,7 +640,10 @@ audio#bgm{display:none}
     <div class="chat-wrap reveal">
       <div class="chat-box">
         <div class="chat-head">
-          <div class="ava"><img src="images/avatar.jpg" alt="avatar" /></div>
+          <div class="sig sm" role="img" aria-label="王童 | Cuprum">
+            <span class="sig-txt">王童<i>|</i>Cuprum</span>
+            <i class="sig-laser"></i>
+          </div>
           <div class="who">
             <div class="n">Cuprum · 数字分身</div>
             <div class="s" data-i18n="chat.online">在线 · 已记住你的全部信息</div>
@@ -580,7 +692,7 @@ const DEFAULT = {
   city:"天津 / 广东·深圳", birthday:"2月14日", zodiac:"水瓶座",
   mbti:"INTJ-A", animal:"猫", memory:"萌",
   tagline:"这个人很懒，什么也没有留下～",
-  avatar:"images/avatar.jpg",
+  signature:"王童|Cuprum",
   about:[
     "大家好呀，我是<b>王童</b>，也可以叫我 Cuprum。是个普通的学生，人如其名地支棱着一点点可爱。",
     "出生在<b>2月14日</b>的水瓶座，据说是<b>非典型 INTJ-A</b>——听起来很高冷，其实是个心里住着小猫、外表很 <b>萌</b> 的家伙。",
@@ -767,16 +879,33 @@ document.addEventListener("click", ()=>document.getElementById("lang-menu").clas
    ============================================================ */
 function esc(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));}
 
+/* ---- 个人签名（替代头像）：把 data.signature 渲染到各处签名位 ---- */
+const SIG_DEFAULT = "王童|Cuprum";
+function sigParts(v){
+  const s = String(v == null ? "" : v).trim() || SIG_DEFAULT;
+  const p = s.split("|");
+  return {full:s, left:p[0], right:p.slice(1).join("|")};
+}
+function renderSignatures(){
+  const {full, left, right} = sigParts(data.signature);
+  const fullHTML = right ? esc(left) + "<i>|</i>" + esc(right) : esc(left);
+  document.querySelectorAll(".sig.lg .sig-txt,.sig.sm .sig-txt").forEach(el=>{
+    el.innerHTML = fullHTML;
+    const box = el.closest(".sig"); if(box) box.setAttribute("aria-label","个人签名：" + full.replace("|"," | "));
+  });
+  document.querySelectorAll(".mini-ava .sig-txt").forEach(el=>{ el.textContent = left; });
+}
+
 function renderAll(){
   document.getElementById("year").textContent = new Date().getFullYear();
   // brand
   const logoNode = document.getElementById("nav-logo");
   logoNode.innerHTML = `<b>${esc(data.name || "你")}</b>`;
   document.title = data.name + " · " + data.nickname + " | 个人主页";
+  // 个人签名（原头像位）
+  renderSignatures();
   // hero
-  document.getElementById("hero-avatar").src = data.avatar;
   document.getElementById("hero-badge").textContent = `🎓 ${data.role} · ${data.city}`;
-  document.getElementById("hero-name").textContent = data.name;
   document.querySelector(".aka").innerHTML = `aka <b>${esc(data.nickname)}</b> · ${esc(data.zodiac)} · ${esc(data.mbti)}`;
   document.getElementById("hero-tagline").textContent = data.tagline;
   // about
@@ -908,7 +1037,7 @@ function addBubble(html, who){
   const div = document.createElement("div");
   div.className = "msg " + (who==="user"?"user":"bot");
   div.style.opacity=0; div.style.transform="translateY(8px)";
-  div.innerHTML = (who==="user"?"":`<div class="mini-ava"><img src="${data.avatar}"></div>`)
+  div.innerHTML = (who==="user"?"":`<div class="mini-ava sig xs"><span class="sig-txt">王童</span><i class="sig-laser"></i></div>`)
     + `<div class="bubble">${who==="user"?"":`<div class="who">Cuprum · 分身</div>`}${html}</div>`
     + (who==="user"?`<div class="mini-ava inv"></div>`:"");
   body.appendChild(div);
@@ -920,7 +1049,7 @@ function addTyping(){
   const div = document.createElement("div");
   div.className = "msg bot typing";
   div.id="typing-msg";
-  div.innerHTML = `<div class="mini-ava"><img src="${data.avatar}"></div><div class="bubble"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>`;
+  div.innerHTML = `<div class="mini-ava sig xs"><span class="sig-txt">王童</span><i class="sig-laser"></i></div><div class="bubble"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>`;
   body.appendChild(div); body.scrollTop=body.scrollHeight;
 }
 function botReply(q){
@@ -1013,7 +1142,7 @@ function showEditor(){
       ${fld("mbti","MBTI 人格","text")}
       ${fld("animal","动物塑","text")}
       ${fld("memory","记忆点","text")}
-      ${fld("avatar","头像图片地址","text")}
+      ${fld("signature","个人签名（用 | 分隔，如 王童|Cuprum）","text")}
       ${fld("recent","最近在做","text")}
       ${fld("strengths","擅长方向","text")}
     </div>
@@ -1049,7 +1178,7 @@ function fillEditor(){
   set("name",data.name); set("nickname",data.nickname); set("role",data.role);
   set("city",data.city); set("tagline",data.tagline); set("birthday",data.birthday);
   set("zodiac",data.zodiac); set("mbti",data.mbti); set("animal",data.animal);
-  set("memory",data.memory); set("avatar",data.avatar); set("recent",data.recent);
+  set("memory",data.memory); set("signature",data.signature); set("recent",data.recent);
   set("strengths",data.strengths);
   set("about",data.about.join("\n"));
   set("skills",data.skills.map(s=>[s.ico,s.name,s.desc].join("|")).join("\n"));
@@ -1062,7 +1191,7 @@ function saveFromEditor(){
   data.name=g("name")||data.name; data.nickname=g("nickname"); data.role=g("role");
   data.city=g("city"); data.tagline=g("tagline"); data.birthday=g("birthday");
   data.zodiac=g("zodiac"); data.mbti=g("mbti"); data.animal=g("animal"); data.memory=g("memory");
-  data.avatar=g("avatar")||data.avatar; data.recent=g("recent"); data.strengths=g("strengths");
+  data.signature=g("signature")||data.signature; data.recent=g("recent"); data.strengths=g("strengths");
   data.about = g("about").split(/\r?\n/).filter(Boolean);
   data.skills = g("skills").split(/\r?\n/).filter(Boolean).map(l=>{const p=l.split("|");return {ico:p[0]||"🎵",name:p[1]||"技能",desc:p[2]||""};});
   data.socials = linesToArr(g("socials"),2).map(p=>({name:p[0],url:p[1]||"#"}));
@@ -1224,7 +1353,7 @@ renderQuick();
 /* ============================================================
    ⑦ 头像兜底：图片缺失时用渐变头像替代，避免出现裂图
    ============================================================ */
-(function avatarFallback(){
+(function imgFallback(){
   const FB = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(
     '<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#22d3ee"/><stop offset="1" stop-color="#a78bfa"/></linearGradient></defs><rect width="256" height="256" fill="#0b1122"/><circle cx="128" cy="128" r="102" fill="none" stroke="url(#g)" stroke-width="7"/><text x="128" y="134" text-anchor="middle" dominant-baseline="middle" font-family="Segoe UI,Microsoft YaHei,sans-serif" font-size="96" font-weight="700" fill="#e7ecf8">王</text></svg>');
   document.addEventListener("error", function(e){
