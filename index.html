@@ -3957,7 +3957,8 @@ const BGM = (function(){
     const btn = e.target.closest("button[data-op]");
     if(!btn) return;
     const item = btn.closest(".fb-item");
-    const id = item ? item.getAttribute("data-id") : "";
+    const rbox = btn.closest(".fb-reply-box");   /* 「发送」按钮在回复框内，而回复框是留言卡的兄弟节点 */
+    const id = (item && item.getAttribute("data-id")) || (rbox && rbox.getAttribute("data-box")) || "";
     const op = btn.getAttribute("data-op");
     if(!ownerUser){ ownerStatus("err", T("ownerNotOwner","这个账号不在所有者名单里")); return; }
     if(op === "reply"){
