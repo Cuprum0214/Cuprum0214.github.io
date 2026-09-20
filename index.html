@@ -321,7 +321,7 @@ footer .heart{color:var(--violet)}
 /* ============================================================
    反馈箱：复刻 https://puyuesun.github.io/spy-personal-homepage/ 的意见反馈箱
    · 入口：右下角悬浮按钮，手工复刻的 HUD 圆环徽标（数据环自转、立方体漂浮、斜环绕中心自转），hover 浮出「意见反馈」
-   · 弹窗：原生 <dialog>，单字段留言，只把 message 提交到 Supabase 的 feedback 表
+   · 弹窗：原生 <dialog>，单字段留言（设备类型由浏览器自动识别、只读展示），只把 message 提交到 Supabase 的 feedback 表
    · 参考站的克莱因蓝三档配色，这里换算成本页主题变量 --cyan/--violet/--blue，
      切换赤霞 / 薄荷 / 樱粉等色系时整套反馈箱自动跟随
    ============================================================ */
@@ -639,6 +639,24 @@ audio#bgm{display:none}
   .sig,.sig-laser{animation:none}
   .sig-laser{display:none}
 }
+/* ---- 设备类型：自动识别的只读展示（替换原来的手选下拉） ---- */
+.fb-auto{margin-left:auto;color:rgba(255,255,255,.48);font-size:.68rem;font-weight:500}
+.fb-readout{margin:0}
+.fb-device{display:inline-flex;align-items:center;gap:8px;height:46px;padding:0 16px;border-radius:13px;
+  font-size:.92rem;font-weight:700;color:#eaf7ff;letter-spacing:.02em;
+  border:1px solid color-mix(in srgb,var(--fb-glow) 42%,transparent);
+  background:color-mix(in srgb,var(--fb-glow) 12%,transparent)}
+.fb-device::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--fb-glow);
+  box-shadow:0 0 9px var(--fb-glow)}
+.fb-device[data-device="tablet"]{color:#fff2d6;
+  border-color:color-mix(in srgb,var(--fb-bright) 50%,transparent);
+  background:color-mix(in srgb,var(--fb-bright) 16%,transparent)}
+.fb-device[data-device="tablet"]::before{background:var(--fb-bright);box-shadow:0 0 9px var(--fb-bright)}
+.fb-device[data-device="pc"]{color:#e6fff4;
+  border-color:color-mix(in srgb,var(--fb-mid) 62%,transparent);
+  background:color-mix(in srgb,var(--fb-mid) 22%,transparent)}
+.fb-device[data-device="pc"]::before{background:var(--fb-mid);box-shadow:0 0 9px var(--fb-mid)}
+.fb-field .fb-hint{margin-bottom:0}
 </style>
 </head>
 <body class="booting">
@@ -865,7 +883,7 @@ audio#bgm{display:none}
 <!-- ============================================================
      反馈箱：复刻 https://puyuesun.github.io/spy-personal-homepage/ 的意见反馈箱
      · 入口：右下角悬浮按钮 = 手工复刻的 HUD 圆环徽标；点击时播放鼠标左键点击音效 window.__sfx.click()
-     · 弹窗：原生 <dialog>，单字段留言，只把 message 提交到 Supabase 的 feedback 表
+     · 弹窗：原生 <dialog>，单字段留言（设备类型由浏览器自动识别、只读展示），只把 message 提交到 Supabase 的 feedback 表
      · 配色走主题变量 --cyan / --violet / --blue，切换色系自动跟随
      · 「我的留言（本机留档）」与「主页所有者」折叠面板保留
      ============================================================ -->
@@ -1156,19 +1174,15 @@ audio#bgm{display:none}
       </div>
 
       <div class="fb-field">
-        <label class="fb-label" for="fb-device">
-          <span data-i18n="fb.device">这条反馈针对的设备</span>
-          <span class="fb-required" data-i18n="fb.required">必填</span>
-        </label>
-        <select class="fb-input fb-select" id="fb-device" name="device" required aria-describedby="fb-status">
-          <option value="" data-i18n="fb.devicePick">请选择…</option>
-          <option value="phone" data-i18n="fb.devicePhone">手机</option>
-          <option value="pc" data-i18n="fb.devicePc">电脑</option>
-          <option value="watch" data-i18n="fb.deviceWatch">智能手表</option>
-          <option value="other" data-i18n="fb.deviceOther">其他</option>
-        </select>
-        <input class="fb-input fb-extra" id="fb-device-other" type="text" maxlength="40" hidden
-               placeholder="请填写" data-i18n-ph="fb.fillIn" aria-describedby="fb-status" />
+        <div class="fb-label">
+          <span data-i18n="fb.device">你的设备类型</span>
+          <span class="fb-auto" data-i18n="fb.deviceAuto">自动识别</span>
+        </div>
+        <!-- 设备类型由浏览器自动识别，访客只读；识别结果随表单一起提交 -->
+        <p class="fb-readout" id="fb-device-readout" aria-describedby="fb-device-hint">
+          <b class="fb-device" id="fb-device-value" data-device="pc">识别中…</b>
+        </p>
+        <p class="fb-hint" id="fb-device-hint" data-i18n="fb.deviceHint">由浏览器自动识别，无需填写。</p>
       </div>
 
       <label class="fb-label" for="fb-text">
@@ -1456,14 +1470,14 @@ const I18N = {
       nick:"访客昵称", nickPh:"请填写", fillIn:"请填写",
       rel:"与我的关系", relPick:"请选择…", relClassmate:"同学", relTeacher:"老师", relParent:"家长",
       relRelative:"亲戚", relColleague:"同事", relOther:"其他",
-      device:"这条反馈针对的设备", devicePick:"请选择…", devicePc:"电脑", devicePhone:"手机",
-      deviceWatch:"智能手表", deviceOther:"其他", deviceHint:"不确定选哪个？就选你现在正在看的这个设备。",
+      device:"你的设备类型", deviceAuto:"自动识别", devicePc:"电脑", devicePhone:"手机",
+      deviceTablet:"平板", deviceHint:"由浏览器自动识别，无需填写。",
       otherHint:"选了「其他」就补一句具体内容。",
       text:"反馈内容", textPh:"例如：手机上「技能」这块字有点小，要放大才看得清；或者：某个按钮点了没反应。",
       textHint:"越具体越好：哪个位置、什么体验、你期望的样子。",
       send:"提交反馈", sending:"提交中…", auto:"提交时会自动带上时间，你不需要填。",
       errNick:"请先留个称呼，方便我知道是你", errOther:"选了「其他」的话，请在后面补一句具体内容",
-      errRel:"请先选择「与我的关系」", errDevice:"请先选择「这条反馈针对的设备」", errText:"请先写点反馈内容再提交",
+      errRel:"请先选择「与我的关系」", errText:"请先写点反馈内容再提交",
       errLong:"反馈内容请控制在 1000 字以内，长了我会看不完的～",
       okTitle:"反馈已收到，我会认真看的～", okId:"编号", okAt:"时间", okPriv:"这条留言不会公开，只有主页所有者能看到。",
       failDef:"没能提交成功，内容还在，可以直接重试。",
@@ -1528,14 +1542,14 @@ const I18N = {
       nick:"訪客暱稱", nickPh:"請填寫", fillIn:"請填寫",
       rel:"與我的關係", relPick:"請選擇…", relClassmate:"同學", relTeacher:"老師", relParent:"家長",
       relRelative:"親戚", relColleague:"同事", relOther:"其他",
-      device:"這則回饋針對的裝置", devicePick:"請選擇…", devicePc:"電腦", devicePhone:"手機",
-      deviceWatch:"智慧手錶", deviceOther:"其他", deviceHint:"不確定選哪個？就選你現在正在看的這個裝置。",
+      device:"你的裝置類型", deviceAuto:"自動識別", devicePc:"電腦", devicePhone:"手機",
+      deviceTablet:"平板", deviceHint:"由瀏覽器自動識別，無需填寫。",
       otherHint:"選了「其他」就補一句具體內容。",
       text:"回饋內容", textPh:"例如：手機上「技能」這塊字有點小，要放大才看得清；或者：某個按鈕點了沒反應。",
       textHint:"越具體越好：哪個位置、什麼體驗、你期望的樣子。",
       send:"送出回饋", sending:"送出中…", auto:"送出時會自動附上時間，你不需要填。",
       errNick:"請先留個稱呼，方便我知道是你", errOther:"選了「其他」的話，請在後面補一句具體內容",
-      errRel:"請先選擇「與我的關係」", errDevice:"請先選擇「這則回饋針對的裝置」", errText:"請先寫點回饋內容再送出",
+      errRel:"請先選擇「與我的關係」", errText:"請先寫點回饋內容再送出",
       errLong:"回饋內容請控制在 1000 字以內，太長我會看不完的～",
       okTitle:"回饋已收到，我會認真看的～", okId:"編號", okAt:"時間", okPriv:"這則留言不會公開，只有主頁所有者能看到。",
       failDef:"沒能送出成功，內容還在，可以直接重試。",
@@ -1602,14 +1616,14 @@ I18N.en = {
     nick:"Your name", nickPh:"Required", fillIn:"Required",
     rel:"Your relation to me", relPick:"Choose…", relClassmate:"Classmate", relTeacher:"Teacher", relParent:"Parent",
     relRelative:"Relative", relColleague:"Colleague", relOther:"Other",
-    device:"Which device is this about?", devicePick:"Choose…", devicePc:"Desktop", devicePhone:"Phone",
-    deviceWatch:"Smartwatch", deviceOther:"Other", deviceHint:"Not sure? Just pick the device you're reading this on right now.",
+    device:"Your device type", deviceAuto:"Auto-detected", devicePc:"Desktop", devicePhone:"Phone",
+    deviceTablet:"Tablet", deviceHint:"Detected automatically by your browser — nothing to fill in.",
     otherHint:"If you picked \u201cOther\u201d, add a few words to say what it is.",
     text:"Your feedback", textPh:"e.g. On my phone the Skills text is too small to read; or: a button did nothing when I tapped it.",
     textHint:"The more specific, the better: where it is, what happened, what you expected.",
     send:"Send feedback", sending:"Sending…", auto:"The time is attached automatically — you don't need to fill it in.",
     errNick:"Please leave a name so I know who this is", errOther:"You picked \u201cOther\u201d — please write what it is",
-    errRel:"Please choose your relation to me", errDevice:"Please choose the device this is about", errText:"Please write something first",
+    errRel:"Please choose your relation to me", errText:"Please write something first",
     errLong:"Please keep it under 1000 characters.",
     okTitle:"Got it — I'll read it carefully!", okId:"ID", okAt:"Time", okPriv:"This note is private and only the site owner can read it.",
     failDef:"Couldn't send it. Your text is still here — you can retry.",
@@ -3301,6 +3315,8 @@ const BGM = (function(){
      不需要会话；失败时本机留档 + 复制 + 邮件兜底
    · 「我的留言」= 本机留档（anon 只被允许插入，读不回列表，这是有意的隐私设计）
    · 「主页所有者」面板需 owner_emails / feedback_replies / is_owner()，见 supabase/schema.sql
+   · 设备类型（手机 / 平板 / 电脑）由浏览器自动识别后只读展示，随 message 一起提交，
+     访客无需也无法手选；判定逻辑见 detectDevice()，UA 可伪造，仅作展示参考
    ============================================================ */
 (function feedbackBox(){
   const fab    = document.getElementById("fb-fab");
@@ -3381,8 +3397,7 @@ const BGM = (function(){
     nick: document.getElementById("fb-nick"),
     rel: document.getElementById("fb-rel"),
     relOther: document.getElementById("fb-rel-other"),
-    device: document.getElementById("fb-device"),
-    deviceOther: document.getElementById("fb-device-other"),
+    device: document.getElementById("fb-device-value"),
     text: document.getElementById("fb-text"),
     send: document.getElementById("fb-send"),
     num: document.getElementById("fb-num"),
@@ -3405,6 +3420,40 @@ const BGM = (function(){
     signout: document.getElementById("fb-signout"),
     unread: document.getElementById("fb-unread")
   };
+
+  /* ---- 设备类型：浏览器自动识别（手机 / 平板 / 电脑），访客只读 ----
+     三级判定：UA 明确标识 → iPadOS 13+ 伪装成 macOS 的触屏特征 → 无 UA 线索时按
+     粗指针 + 屏幕短边兜底。任何异常都退回「电脑」，保证永远有值可提交。
+     注意：UA 可被伪造，这里只作展示参考，不参与任何权限或风控判断。 */
+  const DEVICE_LABEL = { phone:"手机", tablet:"平板", pc:"电脑" };
+  function detectDevice(){
+    const ua = navigator.userAgent || "";
+    const touch = navigator.maxTouchPoints || 0;
+    let coarse = false;
+    try{ coarse = window.matchMedia("(pointer: coarse)").matches; }catch(e){}
+    const shortEdge = window.screen
+      ? Math.min(window.screen.width || 0, window.screen.height || 0) || 0
+      : 0;
+    if(/iPad|Tablet|PlayBook|Silk|Kindle|Nexus 7|Nexus 10/i.test(ua)) return "tablet";
+    if(/Android/i.test(ua)) return /Mobile/i.test(ua) ? "phone" : "tablet";
+    if(/iPhone|iPod|Windows Phone|IEMobile|BlackBerry|webOS|Opera Mini/i.test(ua)) return "phone";
+    if(/Macintosh/i.test(ua) && touch > 1) return "tablet";      /* iPadOS 13+ 伪装成 macOS */
+    if(coarse && touch > 0) return shortEdge >= 600 ? "tablet" : "phone";
+    return "pc";
+  }
+  let deviceCode = "pc";
+  function deviceLabel(code){
+    const key = "device" + code.charAt(0).toUpperCase() + code.slice(1);
+    return T(key, DEVICE_LABEL[code] || DEVICE_LABEL.pc);
+  }
+  /* 展示跟随三语；写入 message 正文时用固定的中文名，方便所有者检索统计 */
+  function updateDevice(){
+    deviceCode = detectDevice();
+    if(el.device){
+      el.device.dataset.device = deviceCode;
+      el.device.textContent = deviceLabel(deviceCode);
+    }
+  }
 
   /* ---- 文案：跟随 applyLang() 的三语字典 ---- */
   function T(key, fb){
@@ -3446,11 +3495,12 @@ const BGM = (function(){
     if(dialog.open) return;
     if(typeof dialog.showModal === "function") dialog.showModal();
     else dialog.setAttribute("open","");     /* 极老的浏览器兜底 */
+    updateDevice();                          /* 每次打开重新识别：窗口尺寸变化也能跟上 */
     loadMine(false);
     updateCount();
     /* 从第一个还没填的必填项开始，减少来回找输入框 */
     setTimeout(function(){
-      const first = [el.nick, el.rel, el.device, el.text].find(function(n){ return n && !String(n.value||"").trim(); });
+      const first = [el.nick, el.rel, el.text].find(function(n){ return n && !String(n.value||"").trim(); });
       try{ (first || el.text).focus(); }catch(e){}
     }, 60);
   }
@@ -3510,13 +3560,13 @@ const BGM = (function(){
     return !!(selEl && selEl.value === "other" && (!extraEl || !extraEl.value.trim()));
   }
   function current(){
+    updateDevice();          /* 提交前重算一次，避免页面长时间打开后设备信息过期 */
     return {
       nick: el.nick ? el.nick.value.trim() : "",
       rel: pick(el.rel, el.relOther),
-      device: pick(el.device, el.deviceOther),
+      device: DEVICE_LABEL[deviceCode] || DEVICE_LABEL.pc,   /* 固定中文，便于所有者统计 */
       text: el.text.value.trim(),
-      relOther: otherMissing(el.rel, el.relOther),
-      deviceOther: otherMissing(el.device, el.deviceOther)
+      relOther: otherMissing(el.rel, el.relOther)
     };
   }
   function compose(){
@@ -3534,8 +3584,8 @@ const BGM = (function(){
     extraEl.hidden = !on;
     if(!on) extraEl.value = "";
   }
-  function syncExtras(){ syncExtra(el.rel, el.relOther); syncExtra(el.device, el.deviceOther); }
-  [[el.rel, el.relOther], [el.device, el.deviceOther]].forEach(function(pair){
+  function syncExtras(){ syncExtra(el.rel, el.relOther); }
+  [[el.rel, el.relOther]].forEach(function(pair){
     if(!pair[0]) return;
     pair[0].addEventListener("change", function(){
       syncExtra(pair[0], pair[1]);
@@ -3584,8 +3634,6 @@ const BGM = (function(){
     if(!p.nick)            { bad("errNick","请先留个称呼", el.nick); return; }
     if(!p.rel)             { bad("errRel","请先选择「与我的关系」", el.rel); return; }
     if(p.relOther)         { bad("errOther","请在「其他」后面补一句具体内容", el.relOther); return; }
-    if(!p.device)          { bad("errDevice","请先选择「这条反馈针对的设备」", el.device); return; }
-    if(p.deviceOther)      { bad("errOther","请在「其他」后面补一句具体内容", el.deviceOther); return; }
     if(!p.text)            { bad("errText","请先写点反馈内容", el.text); return; }
     if(p.text.length > 1000){ bad("errLong","反馈内容请控制在 1000 字以内", el.text); return; }
     if(!configured){ onFailed("noconfig","",0); return; }
@@ -3953,12 +4001,14 @@ const BGM = (function(){
     renderMine();
     renderOwner();
     setSendLabel();
+    updateDevice();          /* 设备名跟随三语刷新 */
   };
 
   /* ---- 初始化 ----
      访客提交走 fetch，不需要 supabase-js；SDK 只在「可能存过所有者会话」
      或所有者展开面板时才按需加载，免得每个访客都白下 100KB。 */
   renderMine();          /* 「我的留言」是本机留档，不依赖后端 */
+  updateDevice();        /* 设备类型：进页面就先识别出来给访客看 */
   ownerUI(false);
   let ownerLoading = false;
   function hasStoredSession(){
