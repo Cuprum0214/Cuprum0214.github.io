@@ -1,7 +1,20 @@
 -- ============================================================================
--- Cuprum 个人主页 · 反馈箱（Supabase）
+-- Cuprum 个人主页 · 反馈箱（Supabase）  ——  一键修复版
+--
 -- 用法：Supabase Dashboard → SQL Editor → New query → 整段粘贴 → Run
 --       脚本可重复执行（幂等），失败重跑不会破坏已有数据。
+--
+-- 【一键修复】解决「主页所有者登录不了」：
+--   若库里缺 owner_emails / feedback_replies / is_owner()，跑完本脚本即可修复，
+--   不需要分步执行。脚本末尾会自动刷新接口缓存，并打印一份体检报告。
+--   体检报告怎么看：
+--     · 四个对象应全部显示「✅ 已建」
+--     · 「登录账号」那一节若没有输出任何行，说明账号还没建 →
+--       Authentication → Users → Add user 建好该邮箱，并勾选 Auto Confirm User
+--       （本项目 mailer_autoconfirm = false，不勾选登录会报 Email not confirmed）
+--
+-- 末尾的 notify pgrst, 'reload schema' 是必须的：不刷新缓存的话，
+-- 可能出现「SQL 跑得很成功、页面却仍报找不到表 / 找不到函数」的假故障。
 --
 -- 数据模型（与页面 index.html 里发出去的请求一一对应）：
 --   · 访客提交：POST /rest/v1/feedback  body = { "message": "..." }
@@ -164,17 +177,45 @@ grant select, insert, delete on public.feedback_replies to authenticated;
 
 
 -- ---------------------------------------------------------------------------
--- 4) 自检（可选）：跑完会列出三张表与策略数量，看到数字即可
+-- 4) 刷新接口缓存（必须）
+--    放在所有建表 / 建函数 / 建策略之后，让 PostgREST 立刻重新读取新结构。
+-- ---------------------------------------------------------------------------
+notify pgrst, 'reload schema';
+
+
+-- ---------------------------------------------------------------------------
+-- 5) 体检报告（只读查询，跑完直接看结果）
 -- ---------------------------------------------------------------------------
 select
-  'owner_emails'      as 表,
-  (select count(*) from public.owner_emails)      as 行数,
-  (select count(*) from pg_policies where schemaname = 'public' and tablename = 'owner_emails')      as 策略数
+  'owner_emails（所有者白名单）' as 检查项,
+  case when to_regclass('public.owner_emails') is null then '❌ 缺失' else '✅ 已建' end as 状态,
+  (select count(*) from public.owner_emails) as 数据行数,
+  (select count(*) from pg_policies where schemaname = 'public' and tablename = 'owner_emails') as 策略数
 union all select
-  'feedback',
+  'feedback（访客留言）',
+  case when to_regclass('public.feedback') is null then '❌ 缺失' else '✅ 已建' end,
   (select count(*) from public.feedback),
   (select count(*) from pg_policies where schemaname = 'public' and tablename = 'feedback')
 union all select
-  'feedback_replies',
+  'feedback_replies（所有者回复）',
+  case when to_regclass('public.feedback_replies') is null then '❌ 缺失' else '✅ 已建' end,
   (select count(*) from public.feedback_replies),
-  (select count(*) from pg_policies where schemaname = 'public' and tablename = 'feedback_replies');
+  (select count(*) from pg_policies where schemaname = 'public' and tablename = 'feedback_replies')
+union all select
+  'is_owner()（所有者判断函数）',
+  case when to_regprocedure('public.is_owner()') is null then '❌ 缺失' else '✅ 已建' end,
+  null::bigint,
+  null::bigint;
+
+-- 白名单里现在是哪个邮箱（必须与页面登录用的邮箱一致）
+select email as 白名单邮箱, created_at as 加入时间 from public.owner_emails order by created_at;
+
+-- 登录账号是否存在、邮箱是否已确认：没有任何行 = 账号还没建
+select
+  email as 登录账号,
+  case when email_confirmed_at is null
+       then '❌ 未确认（登录会报 Email not confirmed）'
+       else '✅ 已确认' end as 邮箱状态,
+  last_sign_in_at as 上次登录
+from auth.users
+where lower(email) = lower('18822136876@163.com');
