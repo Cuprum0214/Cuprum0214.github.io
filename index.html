@@ -1490,12 +1490,13 @@ const I18N = {
       probeOk:"已连上反馈服务，点「提交反馈」再试一次。", failNet:"连不上反馈服务",
       failField:"还有必填项没填好，检查一下再试。",
       toolCopy:"复制反馈内容", toolMail:"改成发邮件", toolClearLocal:"清空本机留档",
-      mineTitle:"我的留言", mineEmpty:"还没有提交过留言", mineWait:"待查看", mineReplied:"已回复", mineYou:"我",
+      mineTitle:"我的留言", mineEmpty:"还没有提交过留言", mineWait:"待查看", mineReplied:"已回复", mineRead:"已查看", mineRemoved:"已被主页所有者删除", mineDelLocal:"删除这条留档", mineYou:"我",
       minePending:"未送达", mineLocalTip:"带「未送达」的留言只留档在本机浏览器，还没发给我；可用上面的「改成发邮件」或复制内容发给我，连上后端后重发一次即可。",
       ownerTitle:"主页所有者", ownerHint:"用你自己的邮箱登录后，可在这里查看全部反馈并回复；登录状态只保存在你自己的浏览器里。",
       ownerEmailPh:"你的邮箱", ownerPassPh:"密码", ownerGo:"登录",
       ownerAll:"全部标为已读", ownerOut:"退出",
       ownerReply:"回复", ownerDel:"删除", ownerSend:"发送", ownerReplyPh:"写一句回复…",
+      ownerDelReply:"删除这条回复", ownerDelNone:"这条没被删掉：可能已不存在，或当前账号没有删除权限",
       ownerNeed:"请先填写邮箱与密码", ownerBad:"邮箱或密码不对，再检查一下",
       ownerNotOwner:"这个账号不在所有者名单里", ownerNoSchema:"当前 Supabase 项目还没部署所有者表结构（owner_emails / feedback_replies / is_owner()），见 supabase/schema.sql。", ownerOk:"登录成功，已显示全部反馈", ownerOut2:"已退出登录",
       ownerEmpty:"还没有收到反馈",
@@ -1562,12 +1563,13 @@ const I18N = {
       probeOk:"已連上回饋服務，點「送出回饋」再試一次。", failNet:"連不上回饋服務",
       failField:"還有必填項沒填好，檢查一下再試。",
       toolCopy:"複製回饋內容", toolMail:"改成寄郵件", toolClearLocal:"清空本機留檔",
-      mineTitle:"我的留言", mineEmpty:"還沒有送出過留言", mineWait:"待查看", mineReplied:"已回覆", mineYou:"我",
+      mineTitle:"我的留言", mineEmpty:"還沒有送出過留言", mineWait:"待查看", mineReplied:"已回覆", mineRead:"已查看", mineRemoved:"已被首頁所有者刪除", mineDelLocal:"刪除這條留檔", mineYou:"我",
       minePending:"未送出", mineLocalTip:"帶「未送出」的留言只留檔在本機瀏覽器，還沒寄給我；可用上面的「改成寄郵件」或複製內容寄給我，連上後端後重送一次即可。",
       ownerTitle:"主頁所有者", ownerHint:"用你自己的信箱登入後，可在這裡查看全部回饋並回覆；登入狀態只保存在你自己的瀏覽器裡。",
       ownerEmailPh:"你的信箱", ownerPassPh:"密碼", ownerGo:"登入",
       ownerAll:"全部標為已讀", ownerOut:"登出",
       ownerReply:"回覆", ownerDel:"刪除", ownerSend:"送出", ownerReplyPh:"寫一句回覆…",
+      ownerDelReply:"刪除這條回覆", ownerDelNone:"這條沒被刪掉：可能已不存在，或目前的帳號沒有刪除權限",
       ownerNeed:"請先填寫信箱與密碼", ownerBad:"信箱或密碼不對，再檢查一下",
       ownerNotOwner:"這個帳號不在所有者名單裡", ownerNoSchema:"目前的 Supabase 專案還沒部署所有者表結構（owner_emails / feedback_replies / is_owner()），請見 supabase/schema.sql。", ownerOk:"登入成功，已顯示全部回饋", ownerOut2:"已登出",
       ownerEmpty:"還沒有收到回饋",
@@ -1636,12 +1638,13 @@ I18N.en = {
     probeOk:"Connected. Click \"Send feedback\" to try again.", failNet:"Can't reach the feedback service",
     failField:"Some required fields are still empty — please check and retry.",
     toolCopy:"Copy my feedback", toolMail:"Mail it instead", toolClearLocal:"Clear local drafts",
-    mineTitle:"My messages", mineEmpty:"No messages yet", mineWait:"Waiting", mineReplied:"Replied", mineYou:"Me",
+    mineTitle:"My messages", mineEmpty:"No messages yet", mineWait:"Waiting", mineReplied:"Replied", mineRead:"Seen", mineRemoved:"Deleted by the site owner", mineDelLocal:"Remove this copy", mineYou:"Me",
     minePending:"Not sent", mineLocalTip:"Messages marked \"Not sent\" are only stored in this browser and never reached me. Use \"Mail it instead\" above, or copy the text and send it to me; you can resend once the backend is reachable.",
     ownerTitle:"Site owner", ownerHint:"Sign in with your own email to read and reply to all feedback here; the session stays only in your own browser.",
     ownerEmailPh:"Your email", ownerPassPh:"Password", ownerGo:"Sign in",
     ownerAll:"Mark all read", ownerOut:"Sign out",
     ownerReply:"Reply", ownerDel:"Delete", ownerSend:"Send", ownerReplyPh:"Write a reply…",
+    ownerDelReply:"Delete this reply", ownerDelNone:"That was not deleted: it may already be gone, or this account cannot delete",
     ownerNeed:"Please fill in both email and password", ownerBad:"Wrong email or password — please check again",
     ownerNotOwner:"This account is not on the owner list", ownerNoSchema:"This Supabase project doesn't have the owner schema yet (owner_emails / feedback_replies / is_owner()) — see supabase/schema.sql.", ownerOk:"Signed in — all feedback loaded", ownerOut2:"Signed out",
     ownerEmpty:"No feedback received yet",
@@ -3379,7 +3382,7 @@ const BGM = (function(){
   function mapRow(row){
     const reps = (row.feedback_replies || []).slice().sort(function(a,b){
       return String(a.created_at).localeCompare(String(b.created_at));
-    }).map(function(r){ return { text:r.body, at:r.created_at, owner:!!r.from_owner }; });
+    }).map(function(r){ return { rid:r.id, text:r.body, at:r.created_at, owner:!!r.from_owner }; });
     return {
       id: row.id,
       text: row.message,
@@ -3751,9 +3754,17 @@ const BGM = (function(){
   /* ---- 我的留言 = 本机留档 + 凭编号取回所有者的回复 ----
      这个库对 anon 只开放写入（读回列表被 RLS 挡住），所以「我的留言」
      不依赖远端查询：这台浏览器提交过什么，localStorage 里就有记录。
-     所有者的回复只有本人看得到，访客用自己那条的编号去问 my_thread_replies()：
+     所有者的回复只有本人看得到，访客用自己那条的编号去问 my_thread()：
      函数只按给出的编号取回复，猜不到编号就读不到别人的留言。 */
   let mineReplies = {};        /* { 服务器编号: [{ text, at, owner }] } */
+  let mineAlive = {};          /* { 服务器编号: 这条留言在服务器上还存不存在 } */
+  let mineRead  = {};          /* { 服务器编号: 是否已被所有者查看 } */
+  function localRemove(lid){
+    try{
+      const arr = localList().filter(function(m){ return String(m.id) !== String(lid); });
+      localStorage.setItem(LOCAL_KEY, JSON.stringify(arr));
+    }catch(e){}
+  }
   function uuid4(){
     try{
       if(window.crypto && crypto.randomUUID) return crypto.randomUUID();
@@ -3775,7 +3786,7 @@ const BGM = (function(){
   function refreshMine(){
     const ids = mineServerIds();
     if(!configured || !ids.length) return Promise.resolve();
-    return fetch(SUPABASE_URL.replace(/\/+$/,"") + "/rest/v1/rpc/my_thread_replies", {
+    return fetch(SUPABASE_URL.replace(/\/+$/,"") + "/rest/v1/rpc/my_thread", {
       method: "POST",
       headers: {
         "apikey": SUPABASE_ANON_KEY,
@@ -3787,15 +3798,33 @@ const BGM = (function(){
       return res.ok ? res.json() : null;
     }).then(function(rows){
       if(!Array.isArray(rows)) return;   /* 函数还没部署 / 网络不通：静默保持原样 */
-      const by = {};
+      const by = {}, alive = {}, read = {};
       rows.forEach(function(r){
         const k = r && r.feedback_id;
         if(!k) return;
-        (by[k] = by[k] || []).push({ text: r.body, at: r.created_at, owner: !!r.from_owner });
+        alive[k] = !!r.alive;
+        read[k]  = !!r.is_read;
+        if(r.body) (by[k] = by[k] || []).push({ text: r.body, at: r.created_at, owner: !!r.from_owner });
       });
-      mineReplies = by;
+      mineReplies = by; mineAlive = alive; mineRead = read;
+      syncLocalState();       /* 所有者删掉的，本机留档同步标成「已被删除」 */
       renderMine();
     }).catch(function(){ return null; });
+  }
+  /* 把服务器上的最新状态写回本机留档（只在真的变了才写，避免无谓写盘） */
+  function syncLocalState(){
+    try{
+      const arr = localList();
+      let changed = false;
+      arr.forEach(function(m){
+        const sid = String(m.serverId || "");
+        if(!sid || !(sid in mineAlive)) return;
+        const gone = mineAlive[sid] === false;
+        if(!!m.removed !== gone){ m.removed = gone; changed = true; }
+        if(typeof mineRead[sid] === "boolean" && m.read !== mineRead[sid]){ m.read = mineRead[sid]; changed = true; }
+      });
+      if(changed) localStorage.setItem(LOCAL_KEY, JSON.stringify(arr));
+    }catch(e){}
   }
   function loadMine(expand){
     if(expand){
@@ -3809,20 +3838,29 @@ const BGM = (function(){
     opt = opt || {};
     const repl = (m.replies || []).map(function(r){
       /* 同一段 HTML 两处共用：所有者看到的是「我的回复」，访客看到的是「主页所有者的回复」 */
+      const del = (opt.owner && r.rid)
+        ? '<button type="button" class="fb-ghost" style="margin-top:7px" data-op="delrep" data-rid="'
+          + esc(r.rid) + '" title="' + esc(T("ownerDelReply","删除这条回复")) + '">'
+          + esc(T("ownerDel","删除")) + "</button>"
+        : "";
       return '<div class="fb-reply"><div class="who">'
         + esc(opt.owner ? T("ownerYou","我的回复") : T("replyFrom","主页所有者的回复")) + "</div>"
         + '<div class="txt">' + esc(r.text) + "</div>"
-        + '<div class="who" style="font-weight:400;opacity:.65;margin-top:4px">' + esc(fmtTime(r.at)) + "</div></div>";
+        + '<div class="who" style="font-weight:400;opacity:.65;margin-top:4px">' + esc(fmtTime(r.at)) + "</div>"
+        + del + "</div>";
     }).join("");
     let tag = "";
-    if(opt.pending) tag = '<span class="tag warn">' + esc(T("minePending","未送达")) + "</span>";
+    if(opt.removed)          tag = '<span class="tag warn">' + esc(T("mineRemoved","已被主页所有者删除")) + "</span>";
+    else if(opt.pending)     tag = '<span class="tag warn">' + esc(T("minePending","未送达")) + "</span>";
     else if((m.replies || []).length) tag = '<span class="tag">' + esc(T("mineReplied","已回复")) + "</span>";
     else if(m.read === false) tag = '<span class="tag new">' + esc(T("mineWait","待查看")) + "</span>";
-    return '<div class="fb-item" data-id="' + esc(m.id) + '">'
+    else if(m.read === true && !opt.owner) tag = '<span class="tag">' + esc(T("mineRead","已查看")) + "</span>";
+    return '<div class="fb-item' + (opt.removed ? " is-removed" : "") + '" data-id="' + esc(m.id) + '">'
       + '<div class="top">' + tag
       + '<span class="mono">' + esc(fmtTime(m.at)) + "</span>"
       + "</div>"
-      + '<div class="txt">' + esc(m.text) + "</div>"
+      + '<div class="txt"' + (opt.removed ? ' style="opacity:.5;text-decoration:line-through"' : "") + ">"
+      + esc(m.text) + "</div>"
       + repl
       + (opt.ops ? '<div class="ops">' + opt.ops + "</div>" : "")
       + "</div>";
@@ -3831,8 +3869,12 @@ const BGM = (function(){
     if(!el.mineList) return;
     const local = localList();
     const body = local.map(function(m){
-      const replies = mineReplies[String(m.serverId || "")] || [];
-      return itemHTML(Object.assign({}, m, {replies: replies}), {pending: !!m.pending});
+      const sid = String(m.serverId || "");
+      const replies = m.removed ? [] : (mineReplies[sid] || []);
+      const ops = '<button type="button" data-fb="delLocal" data-lid="' + esc(m.id) + '">'
+                + esc(T("mineDelLocal","删除这条留档")) + "</button>";
+      return itemHTML(Object.assign({}, m, {replies: replies}),
+                      {pending: !!m.pending, removed: !!m.removed, ops: ops});
     }).join("");
     if(!body){
       el.mineList.innerHTML = '<div class="fb-empty">' + esc(T("mineEmpty","还没有提交过留言")) + "</div>";
@@ -3845,9 +3887,16 @@ const BGM = (function(){
   }
   if(el.mineList){
     el.mineList.addEventListener("click", function(e){
+      const del = e.target.closest('[data-fb="delLocal"]');
+      if(del){                                   /* 只删本机留档，服务器上的那条不动 */
+        if(!confirm(T("mineDelLocal","删除这条留档") + " ?")) return;
+        localRemove(del.getAttribute("data-lid") || "");
+        renderMine();
+        return;
+      }
       if(!e.target.closest('[data-fb="clearLocal"]')) return;
       if(!confirm(T("toolClearLocal","清空本机留档") + " ?")) return;
-      localClear(); mineReplies = {}; renderMine();
+      localClear(); mineReplies = {}; mineAlive = {}; mineRead = {}; renderMine();
     });
   }
 
@@ -4026,10 +4075,28 @@ const BGM = (function(){
       if(!confirm(T("ownerDel","删除") + " ?")) return;
       btn.disabled = true;
       ensureUser().then(function(c){
-        return c.from("feedback").delete().eq("id", id);
+        /* 带上 select：没权限 / 没命中时能立刻发现，而不是「看起来删了、其实没删」 */
+        return c.from("feedback").delete().eq("id", id).select("id");
       }).then(function(res){
         if(res && res.error) throw res.error;
+        if(!res || !res.data || !res.data.length) throw new Error(T("ownerDelNone","这条没被删掉：可能已不存在，或当前账号没有删除权限"));
         return loadOwner();
+      }).catch(function(err){
+        ownerStatus("err", T("failDef","操作没成功，请重试") + " · " + sbErr(err));
+      }).then(function(){ btn.disabled = false; });
+      return;
+    }
+    if(op === "delrep"){                      /* 只删这一条回复，不动留言本身 */
+      const rid = btn.getAttribute("data-rid") || "";
+      if(!rid) return;
+      if(!confirm(T("ownerDelReply","删除这条回复") + " ?")) return;
+      btn.disabled = true;
+      ensureUser().then(function(c){
+        return c.from("feedback_replies").delete().eq("id", rid).select("id");
+      }).then(function(res){
+        if(res && res.error) throw res.error;
+        if(!res || !res.data || !res.data.length) throw new Error(T("ownerDelNone","这条没被删掉：可能已不存在，或当前账号没有删除权限"));
+        return loadOwner().then(function(){ ownerStatus("ok", T("ownerDelReply","删除这条回复") + " ✓"); });
       }).catch(function(err){
         ownerStatus("err", T("failDef","操作没成功，请重试") + " · " + sbErr(err));
       }).then(function(){ btn.disabled = false; });
