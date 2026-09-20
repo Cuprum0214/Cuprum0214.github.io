@@ -3605,9 +3605,10 @@ const BGM = (function(){
       return Array.isArray(arr) ? arr : [];
     }catch(e){ return []; }
   }
-  function localSave(p, pending){
+  function localSave(p, pending, serverId){
     const rec = {
       id: "local-" + Date.now().toString(36),
+      serverId: serverId || "",              /* 服务器编号：只存本机，用来取回所有者的回复 */
       at: Date.now() / 1000,                 /* 与后端一致：秒级时间戳 */
       text: compose() || p.text || "",       /* 留档与提交内容一致：昵称 / 关系 / 设备 / 正文 */
       pending: !!pending
@@ -3645,8 +3646,10 @@ const BGM = (function(){
     if(lbl) lbl.textContent = T("sending","提交中…");
     status(el.status,"","");
 
-    /* 和参考站一致：anon key 直接打 PostgREST，body 只有 { message }；
-       昵称 / 关系 / 设备写在 message 正文里（这张表只有 message 一列） */
+    /* anon key 直接打 PostgREST，body 是 { id, message }；
+       昵称 / 关系 / 设备写在 message 正文里（这张表只有 message 一列）。
+       编号由浏览器自己生成：访客读不到任何行，只能凭这个编号取回所有者的回复。 */
+    const newId = uuid4();
     fetch(SUPABASE_URL.replace(/\/+$/,"") + "/rest/v1/" + encodeURIComponent(FB_TABLE), {
       method: "POST",
       headers: {
@@ -3655,7 +3658,7 @@ const BGM = (function(){
         "Content-Type": "application/json",
         "Prefer": "return=minimal"
       },
-      body: JSON.stringify({ message: compose() })
+      body: JSON.stringify(newId ? { id: newId, message: compose() } : { message: compose() })
     }).then(function(res){
       if(!res.ok){
         return res.text().then(function(txt){
@@ -3664,8 +3667,9 @@ const BGM = (function(){
           throw err;
         });
       }
-      localSave(p, false);       /* 本机留档：这个库对 anon 只开写入，读不回来，「我的留言」靠它 */
-      onSent({ id: "", at: new Date().toISOString() });
+      localSave(p, false, newId);  /* 本机留档（带编号）：这个库对 anon 只开写入，「我的留言」靠它 */
+      onSent({ id: newId || "", at: new Date().toISOString() });
+      refreshMine();               /* 顺便看看这条有没有新回复 */
     }).catch(function(err){
       onFailed(0, sbErr(err), err && err.status ? err.status : 0);
     }).then(function(){
@@ -3744,15 +3748,62 @@ const BGM = (function(){
     }else{ legacyCopy(txt); done(); }
   });
 
-  /* ---- 我的留言 = 本机留档 ----
+  /* ---- 我的留言 = 本机留档 + 凭编号取回所有者的回复 ----
      这个库对 anon 只开放写入（读回列表被 RLS 挡住），所以「我的留言」
-     不依赖远端查询：这台浏览器提交过什么，localStorage 里就有记录。 */
+     不依赖远端查询：这台浏览器提交过什么，localStorage 里就有记录。
+     所有者的回复只有本人看得到，访客用自己那条的编号去问 my_thread_replies()：
+     函数只按给出的编号取回复，猜不到编号就读不到别人的留言。 */
+  let mineReplies = {};        /* { 服务器编号: [{ text, at, owner }] } */
+  function uuid4(){
+    try{
+      if(window.crypto && crypto.randomUUID) return crypto.randomUUID();
+      const b = new Uint8Array(16);
+      if(window.crypto && crypto.getRandomValues) crypto.getRandomValues(b);
+      else for(let i = 0; i < 16; i++) b[i] = Math.floor(Math.random() * 256);
+      b[6] = (b[6] & 0x0f) | 0x40;      /* version 4 */
+      b[8] = (b[8] & 0x3f) | 0x80;      /* variant 10 */
+      let h = "";
+      for(let i = 0; i < 16; i++) h += (b[i] + 0x100).toString(16).slice(1);
+      return h.slice(0,8) + "-" + h.slice(8,12) + "-" + h.slice(12,16)
+           + "-" + h.slice(16,20) + "-" + h.slice(20);
+    }catch(e){ return ""; }
+  }
+  function mineServerIds(){
+    return localList().map(function(m){ return String(m.serverId || ""); })
+      .filter(function(x){ return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(x); });
+  }
+  function refreshMine(){
+    const ids = mineServerIds();
+    if(!configured || !ids.length) return Promise.resolve();
+    return fetch(SUPABASE_URL.replace(/\/+$/,"") + "/rest/v1/rpc/my_thread_replies", {
+      method: "POST",
+      headers: {
+        "apikey": SUPABASE_ANON_KEY,
+        "Authorization": "Bearer " + SUPABASE_ANON_KEY,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ p_ids: ids })
+    }).then(function(res){
+      return res.ok ? res.json() : null;
+    }).then(function(rows){
+      if(!Array.isArray(rows)) return;   /* 函数还没部署 / 网络不通：静默保持原样 */
+      const by = {};
+      rows.forEach(function(r){
+        const k = r && r.feedback_id;
+        if(!k) return;
+        (by[k] = by[k] || []).push({ text: r.body, at: r.created_at, owner: !!r.from_owner });
+      });
+      mineReplies = by;
+      renderMine();
+    }).catch(function(){ return null; });
+  }
   function loadMine(expand){
     if(expand){
       el.mineSec.classList.remove("closed");
       el.mineHead.setAttribute("aria-expanded","true");
     }
     renderMine();
+    refreshMine();       /* 顺便问一次有没有新回复；失败静默，不影响留言 */
   }
   function itemHTML(m, opt){
     opt = opt || {};
@@ -3777,7 +3828,10 @@ const BGM = (function(){
   function renderMine(){
     if(!el.mineList) return;
     const local = localList();
-    const body = local.map(m=>itemHTML(m, {pending: !!m.pending})).join("");
+    const body = local.map(function(m){
+      const replies = mineReplies[String(m.serverId || "")] || [];
+      return itemHTML(Object.assign({}, m, {replies: replies}), {pending: !!m.pending});
+    }).join("");
     if(!body){
       el.mineList.innerHTML = '<div class="fb-empty">' + esc(T("mineEmpty","还没有提交过留言")) + "</div>";
       return;
@@ -3791,7 +3845,7 @@ const BGM = (function(){
     el.mineList.addEventListener("click", function(e){
       if(!e.target.closest('[data-fb="clearLocal"]')) return;
       if(!confirm(T("toolClearLocal","清空本机留档") + " ?")) return;
-      localClear(); renderMine();
+      localClear(); mineReplies = {}; renderMine();
     });
   }
 
