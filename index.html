@@ -1499,7 +1499,7 @@ const I18N = {
       ownerNeed:"请先填写邮箱与密码", ownerBad:"邮箱或密码不对，再检查一下",
       ownerNotOwner:"这个账号不在所有者名单里", ownerNoSchema:"当前 Supabase 项目还没部署所有者表结构（owner_emails / feedback_replies / is_owner()），见 supabase/schema.sql。", ownerOk:"登录成功，已显示全部反馈", ownerOut2:"已退出登录",
       ownerEmpty:"还没有收到反馈",
-      ownerYou:"我的回复", unread:"未读",
+      ownerYou:"我的回复", replyFrom:"主页所有者的回复", unread:"未读",
       cTitle:"反馈", cNick:"昵称", cRel:"关系", cDev:"设备", cText:"内容", cVisitor:"访客"
     }
   },
@@ -1571,7 +1571,7 @@ const I18N = {
       ownerNeed:"請先填寫信箱與密碼", ownerBad:"信箱或密碼不對，再檢查一下",
       ownerNotOwner:"這個帳號不在所有者名單裡", ownerNoSchema:"目前的 Supabase 專案還沒部署所有者表結構（owner_emails / feedback_replies / is_owner()），請見 supabase/schema.sql。", ownerOk:"登入成功，已顯示全部回饋", ownerOut2:"已登出",
       ownerEmpty:"還沒有收到回饋",
-      ownerYou:"我的回覆", unread:"未讀",
+      ownerYou:"我的回覆", replyFrom:"首頁所有者的回覆", unread:"未讀",
       cTitle:"回饋", cNick:"暱稱", cRel:"關係", cDev:"裝置", cText:"內容", cVisitor:"訪客"
     }
   }
@@ -1645,7 +1645,7 @@ I18N.en = {
     ownerNeed:"Please fill in both email and password", ownerBad:"Wrong email or password — please check again",
     ownerNotOwner:"This account is not on the owner list", ownerNoSchema:"This Supabase project doesn't have the owner schema yet (owner_emails / feedback_replies / is_owner()) — see supabase/schema.sql.", ownerOk:"Signed in — all feedback loaded", ownerOut2:"Signed out",
     ownerEmpty:"No feedback received yet",
-    ownerYou:"My reply", unread:"unread",
+    ownerYou:"My reply", replyFrom:"Reply from the site owner", unread:"unread",
     cTitle:"Feedback", cNick:"Name", cRel:"Relation", cDev:"Device", cText:"Content", cVisitor:"Visitor"
   }
 };
@@ -3808,7 +3808,9 @@ const BGM = (function(){
   function itemHTML(m, opt){
     opt = opt || {};
     const repl = (m.replies || []).map(function(r){
-      return '<div class="fb-reply"><div class="who">' + esc(T("ownerYou","我的回复")) + "</div>"
+      /* 同一段 HTML 两处共用：所有者看到的是「我的回复」，访客看到的是「主页所有者的回复」 */
+      return '<div class="fb-reply"><div class="who">'
+        + esc(opt.owner ? T("ownerYou","我的回复") : T("replyFrom","主页所有者的回复")) + "</div>"
         + '<div class="txt">' + esc(r.text) + "</div>"
         + '<div class="who" style="font-weight:400;opacity:.65;margin-top:4px">' + esc(fmtTime(r.at)) + "</div></div>";
     }).join("");
