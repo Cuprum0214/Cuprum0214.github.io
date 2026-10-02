@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>王童 · Cuprum | 个人主页</title>
-<meta id="meta-desc" name="description" content="王童 (Cuprum) 的个人主页：关于、技能、项目、经历与数字分身聊天。" />
+<meta id="meta-desc" name="description" content="王童 (Cuprum) 的个人主页：关于、爱好、项目、经历与数字分身聊天。" />
 <style>
 /* ============ 基础与变量 ============ */
 :root{
@@ -16,7 +16,9 @@
   --accent:var(--cyan);
 }
 *{margin:0;padding:0;box-sizing:border-box}
-html{scroll-behavior:smooth}
+html{scroll-behavior:smooth;scroll-padding-top:76px}
+@media(max-width:820px){html{scroll-padding-top:104px}}
+@media(max-width:480px){html{scroll-padding-top:130px}}
 body{
   font-family:"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,-apple-system,sans-serif;
   background:var(--bg);color:var(--text);line-height:1.7;overflow-x:hidden;
@@ -48,9 +50,7 @@ canvas#fx{position:fixed;inset:0;z-index:60;pointer-events:none}
 /* ============ 导航 + 语言切换 ============ */
 header.topbar{position:fixed;top:0;left:0;right:0;z-index:50;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);background:rgba(7,11,22,.7);border-bottom:1px solid var(--line)}
 .nav{display:flex;align-items:center;justify-content:space-between;height:64px;gap:12px}
-.logo{display:inline-flex;align-items:center;gap:.35em;font-weight:800;font-size:1.18rem;letter-spacing:.5px;white-space:nowrap;color:var(--cyan)}
-.logo b{color:var(--cyan)}
-.nav-right{display:flex;align-items:center;gap:8px}
+.nav-right{display:flex;align-items:center;gap:8px;margin-left:auto}
 .nav-links{display:flex;gap:4px}
 .nav-links a{padding:8px 12px;border-radius:10px;font-size:.9rem;color:var(--muted);transition:.25s;white-space:nowrap}
 .nav-links a:hover{color:var(--text);background:rgba(120,150,255,.08)}
@@ -60,6 +60,33 @@ header.topbar{position:fixed;top:0;left:0;right:0;z-index:50;backdrop-filter:blu
 .lang-drop{position:relative}
 .lang-btn{display:flex;align-items:center;gap:6px;padding:8px 12px;border-radius:10px;font-size:.9rem;color:var(--muted);background:rgba(120,150,255,.05);border:1px solid var(--card-border);transition:.25s}
 .lang-btn:hover{color:var(--text);border-color:var(--cyan)}
+/* 按钮内图标 / 下拉箭头：不随文字撑大，视觉与文字齐平 */
+.lang-btn .btn-ico,#bgm-ico{display:block;font-size:.94em;line-height:1;flex:0 0 auto}
+.lang-btn .caret{display:block;font-size:.7em;line-height:1;opacity:.8;flex:0 0 auto}
+/* 数字分身跳转入口（右上角一行） */
+.nav-chat{cursor:pointer;text-decoration:none;color:var(--cyan);background:rgba(120,200,255,.08);border-color:rgba(120,200,255,.32)}
+.nav-chat:hover{color:var(--text);border-color:var(--cyan);background:rgba(120,200,255,.14)}
+
+/* ====== 侧边导引栏（≥1200px 显示）====== */
+/* 侧边导引栏：胶囊容器 + 光边 */
+.side-nav{position:fixed;right:20px;top:50%;transform:translateY(-50%);z-index:66;display:none;flex-direction:column;align-items:center;gap:14px;padding:16px 12px;border-radius:999px;border:1px solid rgba(120,200,255,.32);background:linear-gradient(180deg,rgba(12,22,40,.78),rgba(7,12,24,.6));backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:0 0 0 1px rgba(120,200,255,.10),0 0 26px rgba(90,170,255,.22),inset 0 0 20px rgba(90,170,255,.07)}
+.side-dot{position:relative;display:flex;align-items:center;justify-content:center;width:22px;height:22px;text-decoration:none;color:var(--muted);font-size:.78rem;line-height:1;transition:color .25s}
+.side-dot span{position:absolute;right:calc(100% + 14px);top:50%;padding:4px 10px;border-radius:999px;border:1px solid rgba(120,200,255,.3);background:rgba(7,11,22,.86);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);white-space:nowrap;box-shadow:0 0 14px rgba(90,170,255,.2);opacity:0;transform:translateY(-50%) translateX(8px);transition:opacity .25s,transform .25s;pointer-events:none}
+.side-dot i{width:11px;height:11px;flex:0 0 auto;border-radius:50%;border:1px solid var(--card-border);background:rgba(255,255,255,.07);transition:transform .25s,background .25s,border-color .25s,box-shadow .25s}
+.side-dot:hover span,.side-dot:focus-visible span{opacity:1;transform:translateY(-50%) translateX(0)}
+.side-dot:hover{color:var(--text)}
+.side-dot:hover i{border-color:var(--cyan);box-shadow:0 0 10px rgba(120,200,255,.6)}
+.side-dot.active{color:var(--text)}
+.side-dot.active i{background:var(--cyan);border-color:var(--cyan);transform:scale(1.7);box-shadow:0 0 0 6px rgba(120,200,255,.18),0 0 18px rgba(120,200,255,.95),0 0 34px rgba(90,170,255,.55)}
+@media(min-width:1200px){.side-nav{display:flex}}
+
+/* ====== 回到顶部（位于反馈箱按钮上方）====== */
+.to-top{position:fixed;right:24px;bottom:136px;z-index:69;width:56px;height:56px;border-radius:50%;display:grid;place-items:center;cursor:pointer;color:var(--text);background:linear-gradient(180deg,rgba(14,26,46,.92),rgba(7,12,24,.84));border:2px solid rgba(120,200,255,.5);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);opacity:0;visibility:hidden;transform:translateY(10px);box-shadow:0 0 0 1px rgba(120,200,255,.16),0 0 20px rgba(90,170,255,.35),inset 0 0 14px rgba(90,170,255,.10);transition:opacity .3s,transform .3s,visibility .3s,border-color .25s,color .25s,box-shadow .25s}
+.to-top.show{opacity:1;visibility:visible;transform:none;animation:ttPulse 2.6s ease-in-out infinite}
+@keyframes ttPulse{0%,100%{box-shadow:0 0 0 1px rgba(120,200,255,.16),0 0 20px rgba(90,170,255,.35),inset 0 0 14px rgba(90,170,255,.10)}50%{box-shadow:0 0 0 1px rgba(120,200,255,.3),0 0 30px rgba(120,200,255,.7),inset 0 0 18px rgba(120,200,255,.18)}}
+.to-top .tt-arrow{width:19px;height:19px;border-left:4px solid currentColor;border-top:4px solid currentColor;border-radius:2px;transform:rotate(45deg) translate(3px,3px)}
+.to-top:hover{border-color:var(--cyan);color:var(--cyan);transform:translateY(-2px);box-shadow:0 0 0 1px rgba(120,200,255,.34),0 0 34px rgba(120,200,255,.7),inset 0 0 18px rgba(120,200,255,.18)}
+@media(prefers-reduced-motion:reduce){.to-top.show{animation:none}}
 #bgm-btn{cursor:pointer}
 #bgm-btn.off{opacity:.55}
 #bgm-btn.off #bgm-ico{filter:grayscale(1)}
@@ -70,9 +97,36 @@ header.topbar{position:fixed;top:0;left:0;right:0;z-index:50;backdrop-filter:blu
 .lang-menu button.on{color:var(--cyan)}
 .lang-menu button .ck{visibility:hidden}
 .lang-menu button.on .ck{visibility:visible}
+/* ---- 手机 / 窄屏：顶部栏改为两行，功能按钮与「关于…联系」导航都完整显示 ----
+   第一行：色系 / 音乐 / 语言；第二行：关于 · 技能 · 项目 · 经历 · 联系 */
 @media(max-width:820px){
-  .nav-links a{font-size:.82rem;padding:8px 8px}
+  .container{padding:0 16px}
+  .nav{height:auto;min-height:56px;flex-wrap:wrap;align-items:center;
+       padding-top:7px;padding-bottom:7px;row-gap:5px}
+  .nav-right{flex:1 1 auto;min-width:0;flex-wrap:wrap;justify-content:flex-end;
+             gap:6px;row-gap:5px}
+  /* 功能按钮整体收紧：文字与图标同步变小，避免图标喧宾夺主 */
+  .lang-btn{padding:6px 9px;font-size:.76rem;gap:4px;line-height:1.15}
+  .lang-btn .caret{font-size:.62em;line-height:1;opacity:.8}
+  /* 第二行：锚点导航平均铺满整行，绝不裁切 */
+  .nav-links{flex:1 1 100%;justify-content:space-between;gap:2px;
+             margin-top:5px;padding-top:6px;border-top:1px solid var(--line)}
+  .nav-links a{flex:1 1 0;min-width:0;text-align:center;font-size:.78rem;
+               padding:7px 2px;white-space:nowrap}
   .nav-links a span.hide-sm{display:none}
+}
+/* 窄屏：数字分身入口收成图标，避免顶部栏挤成三行 */
+@media(max-width:480px){
+  .nav-chat .nav-chat-txt{display:none}
+  .nav-chat{padding:6px 8px}
+  /* 色系下拉位于按钮组左侧，窄屏改为向右展开，避免菜单左侧被裁 */
+  #theme-menu{right:auto;left:0}
+}
+/* 超窄屏再收一档，保证英文等较长文案也放得下 */
+@media(max-width:420px){
+  .nav-chat{padding:5px 7px}
+  .lang-btn{padding:5px 8px;font-size:.72rem}
+  .nav-links a{font-size:.74rem;padding:7px 1px}
 }
 
 /* ============ Hero ============ */
@@ -166,13 +220,6 @@ header.topbar{position:fixed;top:0;left:0;right:0;z-index:50;backdrop-filter:blu
 .sig.xs{width:44px;height:34px;padding:0;border-radius:10px;flex:0 0 auto}
 .sig.xs .sig-txt{font-size:.72rem;letter-spacing:.06em}
 .sig.xs::after{inset:3px;border-radius:7px}
-/* ============ 猫爪线稿简笔画（位于左上角「王童」右侧）：线稿颜色随主题色变化，
-   尺寸与 logo 字号相同（height:1em 即当前 font-size），由脚本从首屏搬运到此 ============ */
-.paw{display:inline-flex;align-items:center;flex:0 0 auto;margin:0;color:var(--accent)}
-.paw svg{height:1em;width:auto;overflow:visible;display:block;
-  filter:drop-shadow(0 0 6px color-mix(in srgb,var(--accent) 45%,transparent));
-  transition:filter .3s,color .3s}
-.paw path,.paw circle,.paw ellipse{stroke:currentColor}
 .hero .badge{display:inline-flex;align-items:center;gap:8px;margin:6px auto 18px;padding:7px 16px;border-radius:999px;font-size:.85rem;color:var(--muted);border:1px solid var(--card-border);background:var(--card)}
 .hero .badge::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--cyan);box-shadow:0 0 10px var(--cyan);animation:pulse 1.8s infinite}
 @keyframes pulse{50%{opacity:.35}}
@@ -200,10 +247,23 @@ section{padding:92px 0}
 .kicker{color:var(--cyan);font-size:.9rem;letter-spacing:3px;text-transform:uppercase;font-weight:600}
 .section-head h2{font-size:clamp(1.8rem,4vw,2.5rem);font-weight:800;margin-top:10px}
 .section-head p{color:var(--muted);margin-top:12px;max-width:640px;margin-inline:auto}
-.card{background:var(--card);border:1px solid var(--card-border);border-radius:var(--radius);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);padding:26px;transition:.3s;position:relative;overflow:hidden}
-.card:hover{transform:translateY(-4px);border-color:rgba(120,160,255,.32)}
-.reveal{opacity:0;transform:translateY(34px);transition:opacity .7s ease,transform .7s ease}
+.section-head .sec-hint{color:color-mix(in srgb,var(--cyan) 78%,#fff);font-size:.8rem;letter-spacing:.05em;margin-top:16px;opacity:.92}
+.card{background:var(--card);border:1px solid var(--card-border);border-radius:var(--radius);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);padding:26px;position:relative;overflow:hidden;
+  transition:transform .38s cubic-bezier(.22,.61,.36,1),border-color .34s ease,box-shadow .34s ease}
+.reveal{opacity:0;transform:translateY(34px);transition:opacity .7s ease,transform .38s cubic-bezier(.22,.61,.36,1)}
 .reveal.in{opacity:1;transform:none}
+/* == 悬停特效：鼠标触碰模块 → 整体轻微膨胀，内部图标再放大一点 ==
+   用 @media(hover:hover) 包裹，触屏设备不会出现“粘住”的悬停状态 */
+@media(hover:hover){
+  .card:hover,.card.reveal.in:hover,.meta-item:hover,.trait:hover{transform:translateY(-3px) scale(1.028);z-index:2;
+    border-color:color-mix(in srgb,var(--cyan) 42%,var(--card-border));
+    box-shadow:0 18px 44px rgba(0,0,0,.36),0 0 0 1px color-mix(in srgb,var(--cyan) 18%,transparent)}
+  .card:hover .ico{transform:scale(1.09);
+    border-color:color-mix(in srgb,var(--cyan) 40%,var(--card-border));
+    background:color-mix(in srgb,var(--cyan) 12%,transparent)}
+  .meta-item:hover .ico{transform:scale(1.12);color:var(--cyan)}
+  .trait:hover .ico{transform:scale(1.12)}
+}
 
 /* == About == */
 .about-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:22px}
@@ -212,22 +272,95 @@ section{padding:92px 0}
 .about-text p:last-child{margin-bottom:0}
 .about-text b{color:var(--cyan)}
 .about-meta{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;grid-column:1/-1}
-.meta-item{display:flex;gap:12px;align-items:flex-start;padding:16px;border-radius:14px;border:1px solid var(--card-border);background:var(--card)}
-.meta-item .ico{font-size:1.3rem;line-height:1;color:var(--violet)}
+.meta-item{display:flex;gap:12px;align-items:flex-start;padding:16px;border-radius:14px;border:1px solid var(--card-border);background:var(--card);position:relative;
+  transition:transform .38s cubic-bezier(.22,.61,.36,1),border-color .34s ease,box-shadow .34s ease}
+.meta-item .ico{font-size:1.3rem;line-height:1;color:var(--violet);transition:transform .38s cubic-bezier(.22,.61,.36,1),color .3s ease}
 .meta-item .k{font-size:.76rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
 .meta-item .v{font-weight:600}
-.traits{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
-.trait{text-align:center;padding:18px 12px;border-radius:14px;border:1px solid var(--card-border);background:var(--card)}
-.trait .ico{font-size:1.6rem;margin-bottom:8px}
-.trait .k{font-size:.78rem;color:var(--muted);letter-spacing:1px}
-.trait .v{font-weight:700;margin-top:2px}
 
 /* == Skills == */
 .skills-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:22px}
 .skill-card{text-align:center;padding:30px 20px}
-.skill-card .ico{width:64px;height:64px;margin:0 auto 16px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:2rem;background:rgba(120,150,255,.08);border:1px solid var(--card-border)}
+.skill-card .ico{width:64px;height:64px;margin:0 auto 16px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:2rem;background:rgba(120,150,255,.08);border:1px solid var(--card-border);
+  transition:transform .38s cubic-bezier(.22,.61,.36,1),border-color .34s ease,background .34s ease}
 .skill-card h3{font-size:1.1rem;margin-bottom:6px;color:var(--cyan)}
 .skill-card p{color:var(--muted);font-size:.9rem}
+a.skill-card{display:block;color:inherit;text-decoration:none;cursor:pointer}
+.skill-card .skill-more{display:inline-flex;align-items:center;gap:6px;margin-top:14px;font-size:.78rem;letter-spacing:.06em;color:var(--cyan);opacity:.7;transition:opacity .25s,transform .25s}
+.skill-card .skill-more i{font-style:normal;transition:transform .25s}
+.skill-card:hover .skill-more,.skill-card:focus-visible .skill-more{opacity:1;transform:translateX(2px)}
+.skill-card:hover .skill-more i,.skill-card:focus-visible .skill-more i{transform:translateX(3px)}
+.skill-card:focus-visible{outline:2px solid var(--cyan);outline-offset:4px}
+
+/* == 技能画廊（点击技能卡片进入）== */
+.gallery-view{position:fixed;inset:0;z-index:800;overflow-y:auto;overflow-x:hidden;
+  background:
+    radial-gradient(1200px 700px at 82% -12%,color-mix(in srgb,var(--cyan) 13%,transparent),transparent 60%),
+    radial-gradient(900px 620px at -12% 112%,color-mix(in srgb,var(--violet) 15%,transparent),transparent 60%),
+    linear-gradient(180deg,var(--bg),var(--bg-2))}
+.gallery-view[hidden]{display:none}
+body.gallery-open{overflow:hidden}
+.gallery-bar{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:14px;
+  padding:13px clamp(16px,4vw,40px);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  background:color-mix(in srgb,var(--bg) 80%,transparent);border-bottom:1px solid var(--line)}
+.gallery-back{display:inline-flex;align-items:center;gap:8px;padding:9px 16px;border-radius:999px;font:inherit;font-size:.86rem;
+  border:1px solid var(--card-border);background:rgba(120,150,255,.08);color:var(--text);cursor:pointer;transition:.25s}
+.gallery-back:hover,.gallery-back:focus-visible{border-color:var(--cyan);color:var(--cyan);outline:none}
+.gallery-crumb{font:600 .72rem/1.4 ui-monospace,Consolas,monospace;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gallery-nav{margin-left:auto;display:flex;align-items:center;gap:8px;flex:0 0 auto}
+.gallery-nav button{width:36px;height:36px;border-radius:50%;font:inherit;font-size:1.1rem;line-height:1;color:var(--text);
+  border:1px solid var(--card-border);background:rgba(120,150,255,.08);cursor:pointer;transition:.25s}
+.gallery-nav button:hover:not([disabled]),.gallery-nav button:focus-visible:not([disabled]){border-color:var(--cyan);color:var(--cyan);outline:none}
+.gallery-nav button[disabled]{opacity:.32;cursor:not-allowed}
+.gallery-count{min-width:52px;text-align:center;font:600 .78rem/1 ui-monospace,Consolas,monospace;color:var(--muted)}
+.gallery-inner{max-width:1080px;margin:0 auto;padding:clamp(28px,5vw,56px) clamp(16px,4vw,40px) 90px}
+.gallery-head{display:flex;align-items:center;gap:20px}
+.gallery-ico{flex:0 0 auto;width:76px;height:76px;border-radius:20px;display:flex;align-items:center;justify-content:center;
+  font-size:2.4rem;background:rgba(120,150,255,.08);border:1px solid var(--card-border)}
+.gallery-kicker{margin:0 0 6px;font:600 .72rem/1.6 ui-monospace,Consolas,monospace;letter-spacing:.22em;text-transform:uppercase;color:var(--cyan)}
+.gallery-title{margin:0;font-size:clamp(1.6rem,4.6vw,2.4rem);line-height:1.2}
+.gallery-sub{margin:8px 0 0;color:var(--muted);font-size:.95rem;line-height:1.7;max-width:58ch}
+.gallery-sec{padding:0;margin-top:clamp(30px,5vw,48px)}
+.gallery-h2{display:flex;align-items:center;gap:12px;margin:0 0 18px;font-size:1rem;letter-spacing:.05em;color:var(--cyan)}
+.gallery-h2::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--card-border),transparent)}
+/* 瀑布流：按图片原始比例完整展示（不裁切），高低错落但整体整齐 */
+.gallery-grid{columns:3;column-gap:14px}
+/* group layout: split by orientation; equal width inside a block, original aspect ratio kept (never cropped) */
+.gallery-grid.gallery-split{columns:auto;display:flex;flex-direction:column;gap:14px}
+.gallery-block{display:grid;gap:14px;align-items:start}
+.gallery-block.cols-4{grid-template-columns:repeat(4,1fr)}
+.gallery-block.cols-3{grid-template-columns:repeat(3,1fr)}
+.gallery-block.cols-2{grid-template-columns:repeat(2,1fr)}
+.gallery-block.cols-1{grid-template-columns:1fr}
+.gallery-split .gallery-tile{margin:0}
+.gallery-tile{margin:0 0 14px;break-inside:avoid;-webkit-column-break-inside:avoid;border-radius:16px;overflow:hidden;
+  border:1px solid var(--card-border);background:rgba(120,150,255,.06)}
+.gallery-tile img{width:100%;height:auto;display:block}
+.gallery-tile figcaption{padding:9px 12px;font-size:.8rem;color:var(--muted);border-top:1px solid var(--card-border)}
+.gallery-empty{column-span:all;display:flex;align-items:center;justify-content:center;min-height:150px;padding:26px;
+  border:1px dashed var(--card-border);border-radius:16px;color:var(--muted);font-size:.9rem;text-align:center}
+.gallery-prose{color:color-mix(in srgb,var(--cyan) 52%,var(--text));font-size:.98rem;line-height:1.85}
+.gallery-prose p{margin:0 0 14px}
+.gallery-prose h3{margin:22px 0 8px;font-size:1.02rem;color:var(--cyan)}
+.gallery-prose h3:first-child{margin-top:0}
+/* 关键词标签：胶囊样式，配色绑定 --cyan → 随主题变化 */
+.gallery-tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.gallery-tags span{font-size:.76rem;padding:4px 11px;border-radius:999px;color:color-mix(in srgb,var(--cyan) 62%,#fff);border:1px solid color-mix(in srgb,var(--cyan) 38%,transparent);background:color-mix(in srgb,var(--cyan) 8%,transparent)}
+@media(max-width:920px){.gallery-grid{columns:2}.gallery-block.cols-4{grid-template-columns:repeat(3,1fr)}.gallery-block.cols-3{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:600px){
+  .gallery-grid{columns:1}
+  .gallery-block.cols-4{grid-template-columns:repeat(2,1fr)}
+  .gallery-block.cols-3{grid-template-columns:1fr}
+  .gallery-block.cols-2{grid-template-columns:1fr}
+  .gallery-head{flex-direction:column;align-items:flex-start;gap:14px}
+  .gallery-ico{width:62px;height:62px;border-radius:16px;font-size:2rem}
+  .gallery-crumb{display:none}
+}
+@media(prefers-reduced-motion:reduce){.gallery-back,.gallery-nav button,.skill-card .skill-more,.skill-card .skill-more i,
+  .card,.meta-item,.trait,.skill-card .ico,.meta-item .ico,.trait .ico{transition:none}
+  .card:hover,.card.reveal.in:hover,.meta-item:hover,.trait:hover{transform:none}
+  .card:hover .ico,.meta-item:hover .ico,.trait:hover .ico{transform:none}}
 
 /* == Projects == */
 .projects-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:22px}
@@ -257,7 +390,7 @@ section{padding:92px 0}
 .contact-card h3{font-size:1.5rem;margin-bottom:10px}
 .contact-card>p{color:var(--muted);margin-bottom:24px}
 .contact-links{display:grid;grid-template-columns:1fr 1fr;gap:12px;text-align:left}
-.contact-links a{display:flex;align-items:center;gap:10px;font-size:.95rem;color:var(--text);padding:13px 16px;border-radius:12px;border:1px solid var(--card-border);background:var(--card);transition:.25s}
+.contact-links a{display:flex;align-items:center;gap:10px;font-size:.95rem;color:var(--text);padding:13px 16px;border-radius:12px;border:1px solid var(--card-border);background:var(--card);transition:.25s;min-width:0}
 .contact-links a:hover{border-color:var(--cyan);transform:translateY(-2px)}
 .contact-links .ico{font-size:1.15rem;flex-shrink:0}
 .contact-links .txt{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -306,13 +439,61 @@ section{padding:92px 0}
 /* == Footer == */
 footer{padding:36px 0;border-top:1px solid var(--line);text-align:center;color:var(--muted);font-size:.85rem}
 footer .heart{color:var(--violet)}
+/* 页脚小入口：© 版权行 + 「关于本站 · 更新记录」 */
+footer #foot-line{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px 10px}
+footer .foot-sep{opacity:.35}
+footer .foot-dot{opacity:.55}
+footer .foot-link{background:none;border:0;padding:0;color:var(--muted);font:inherit;font-size:inherit;cursor:pointer;border-bottom:1px solid transparent;transition:color .22s,border-color .22s}
+footer .foot-link:hover,footer .foot-link:focus-visible{color:var(--cyan);border-bottom-color:currentColor;outline:none}
+
+/* == 页脚弹窗：关于本站 / 更新记录 == */
+.doc-dialog{margin:auto;width:min(92vw,620px);max-height:min(88dvh,780px);padding:0;border:0;border-radius:24px;overflow:visible;color:#fff;background:transparent}
+.doc-dialog::backdrop{background:rgba(2,5,16,.72);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.doc-dialog:not([open]){display:none}
+.doc-card{position:relative;width:100%;max-height:min(88dvh,780px);overflow-y:auto;padding:30px;border-radius:24px;
+  border:1px solid color-mix(in srgb,var(--cyan) 26%,transparent);
+  background:radial-gradient(460px 260px at 100% 0%,color-mix(in srgb,var(--cyan) 16%,transparent),transparent 65%),
+    linear-gradient(100deg,color-mix(in srgb,var(--blue) 10%,#01020c) 8%,color-mix(in srgb,var(--blue) 42%,#020524) 70%,color-mix(in srgb,var(--cyan) 40%,var(--blue)) 99%);
+  box-shadow:0 48px 110px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.12)}
+.doc-x{position:absolute;top:16px;right:16px;z-index:3;width:34px;height:34px;border-radius:50%;border:1px solid rgba(255,255,255,.22);color:#fff;background:rgba(255,255,255,.08);font-size:1.35rem;line-height:1;cursor:pointer;transition:transform .2s,background .2s}
+.doc-x:hover,.doc-x:focus-visible{transform:rotate(90deg);background:rgba(255,255,255,.18);outline:none}
+.doc-head{position:relative;padding-right:40px;padding-bottom:18px;border-bottom:1px solid rgba(255,255,255,.14)}
+.doc-kicker{margin:0 0 7px;font:600 .72rem/1.75 ui-monospace,Consolas,monospace;letter-spacing:.24em;color:color-mix(in srgb,var(--cyan) 58%,#fff);text-transform:uppercase}
+.doc-title{margin:0;font-size:clamp(1.3rem,4.4vw,1.75rem);line-height:1.2}
+.doc-sub{margin-top:10px;color:rgba(255,255,255,.72);font-size:.86rem;line-height:1.7}
+.doc-body{position:relative;z-index:1;padding-top:20px;font-size:.92rem;line-height:1.78;color:#e8eefc}
+.doc-body p{margin:0 0 12px}
+.doc-body p:last-child{margin-bottom:0}
+.doc-tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.doc-tags span{font-size:.76rem;padding:4px 11px;border-radius:999px;color:color-mix(in srgb,var(--cyan) 62%,#fff);border:1px solid color-mix(in srgb,var(--cyan) 38%,transparent);background:color-mix(in srgb,var(--cyan) 8%,transparent)}
+/* 更新记录：里程碑时间线 */
+.doc-log{list-style:none;margin:0;padding:0 0 0 20px;display:flex;flex-direction:column;gap:16px;position:relative}
+.doc-log::before{content:"";position:absolute;left:5px;top:6px;bottom:6px;width:2px;background:linear-gradient(var(--cyan),var(--violet));opacity:.6}
+.doc-log li{position:relative}
+.doc-log li::before{content:"";position:absolute;left:-19px;top:6px;width:10px;height:10px;border-radius:50%;background:#040817;border:2px solid var(--cyan);box-shadow:0 0 10px color-mix(in srgb,var(--cyan) 60%,transparent)}
+.doc-log .d{font:600 .74rem/1.6 ui-monospace,Consolas,monospace;color:color-mix(in srgb,var(--cyan) 72%,#fff);letter-spacing:.06em}
+.doc-log .h{font-weight:700;margin:1px 0 3px}
+.doc-log .p{color:rgba(255,255,255,.72);font-size:.88rem}
+/* 更新记录：按周分组的版本标题 + 版本徽标 */
+.doc-wk + .doc-wk{margin-top:24px}
+.doc-wk__head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:0 0 14px;padding-bottom:8px;border-bottom:1px dashed rgba(255,255,255,.16)}
+.doc-wk__head .wk-v{font:800 1.02rem/1 ui-monospace,Consolas,monospace;letter-spacing:.06em;color:#fff;text-shadow:0 0 14px color-mix(in srgb,var(--cyan) 55%,transparent)}
+.doc-wk__head .wk-r{font:600 .72rem/1.6 ui-monospace,Consolas,monospace;color:rgba(255,255,255,.55);letter-spacing:.04em}
+.doc-log .d{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.doc-log .d .v{font:700 .68rem/1.6 ui-monospace,Consolas,monospace;padding:1px 7px;border-radius:6px;color:#040817;background:linear-gradient(120deg,var(--cyan),var(--violet));letter-spacing:.04em}
+@media(max-width:600px){.doc-card{padding:24px 18px;border-radius:20px}}
+@media(prefers-reduced-motion:reduce){.doc-x{transition:none}}
 
 @media(max-width:820px){
   section{padding:66px 0}
+  /* 顶部栏在窄屏为两行，首屏相应下移，避免内容被固定导航压住 */
+  .hero{padding-top:104px}
+  .hero-inner{padding:28px 0}
   .about-grid,.skills-grid,.projects-grid{gap:16px}
   .about-meta{grid-template-columns:1fr 1fr}
-  .traits{grid-template-columns:repeat(2,1fr)}
   .contact-links{grid-template-columns:1fr}
+  /* 窄屏邮箱过长：允许换行完整显示，避免被卡片裁掉（配合 a 的 min-width:0） */
+  .contact-links .txt{white-space:normal;overflow-wrap:anywhere}
   .chat-box{height:560px}
 }
 
@@ -705,22 +886,22 @@ audio#bgm{display:none}
 <!-- ====== 导航 ====== -->
 <header class="topbar">
   <nav class="container nav">
-    <a href="#home" class="logo" id="nav-logo"></a>
     <div class="nav-right">
       <div class="lang-drop">
-        <button class="lang-btn" id="theme-btn">🎨 <span id="theme-cur">色系</span> ▾</button>
+        <button class="lang-btn" id="theme-btn"><span class="btn-ico" aria-hidden="true">🎨</span> <span id="theme-cur">色系</span> <span class="caret" aria-hidden="true">▾</span></button>
         <div class="lang-menu" id="theme-menu"></div>
       </div>
       <button class="lang-btn" id="bgm-btn" type="button" title="背景音乐开关">
-        <span id="bgm-ico">🎵</span> <span data-i18n="nav.music">音乐</span>
+        <span id="bgm-ico" class="btn-ico">🎵</span> <span data-i18n="nav.music">音乐</span>
       </button>
       <div class="lang-drop">
-        <button class="lang-btn" id="lang-btn">🌐 <span id="lang-cur">中文</span> ▾</button>
+        <button class="lang-btn" id="lang-btn"><span class="btn-ico" aria-hidden="true">🌐</span> <span id="lang-cur">中文</span> <span class="caret" aria-hidden="true">▾</span></button>
         <div class="lang-menu" id="lang-menu"></div>
       </div>
+      <a class="lang-btn nav-chat" id="nav-chat" href="#chat" onclick="openChat()" data-i18n-aria="nav.chatJumpAria" data-i18n-title="nav.chat"><span class="btn-ico" aria-hidden="true">🤖</span><span class="nav-chat-txt" data-i18n="nav.chatJump">数字分身</span></a>
       <div class="nav-links">
         <a href="#about" data-i18n="nav.about">关于</a>
-        <a href="#skills" data-i18n="nav.skills">技能</a>
+        <a href="#skills" data-i18n="nav.skills">爱好</a>
         <a href="#projects" data-i18n="nav.projects">项目</a>
         <a href="#experience" data-i18n="nav.exp">经历</a>
         <a href="#contact" data-i18n="nav.contact">联系</a>
@@ -728,6 +909,17 @@ audio#bgm{display:none}
     </div>
   </nav>
 </header>
+
+<!-- ====== 侧边导引栏 + 回到顶部 ====== -->
+<nav class="side-nav" id="side-nav" aria-label="页面导引" data-i18n-aria="nav.sideAria">
+  <a class="side-dot" href="#about" data-i18n-title="nav.about"><span data-i18n="nav.about">关于</span><i aria-hidden="true"></i></a>
+  <a class="side-dot" href="#skills" data-i18n-title="nav.skills"><span data-i18n="nav.skills">爱好</span><i aria-hidden="true"></i></a>
+  <a class="side-dot" href="#projects" data-i18n-title="nav.projects"><span data-i18n="nav.projects">项目</span><i aria-hidden="true"></i></a>
+  <a class="side-dot" href="#experience" data-i18n-title="nav.exp"><span data-i18n="nav.exp">经历</span><i aria-hidden="true"></i></a>
+  <a class="side-dot" href="#contact" data-i18n-title="nav.contact"><span data-i18n="nav.contact">联系</span><i aria-hidden="true"></i></a>
+  <a class="side-dot" href="#chat" data-i18n-title="nav.chat"><span data-i18n="nav.chat">数字分身</span><i aria-hidden="true"></i></a>
+</nav>
+<button class="to-top" id="to-top" type="button" title="回到顶部" aria-label="回到顶部" data-i18n-title="nav.top" data-i18n-aria="nav.topAria"><span class="tt-arrow" aria-hidden="true"></span></button>
 
 <!-- ====== Hero ====== -->
 <section class="hero" id="home">
@@ -738,27 +930,9 @@ audio#bgm{display:none}
       <i class="sig-laser"></i><i class="sig-laser v2"></i>
     </div>
     <div class="badge" id="hero-badge">🎓 学生 · 天津 / 广东 · 深圳</div>
-    <!-- 猫爪线稿简笔画（替代原「王童」大标题）：由参考图轮廓矢量化得到的纯 path 线稿，
-         未内嵌任何图片；描边用 currentColor，由 CSS 的 --accent（主题色）驱动 -->
-    <div class="paw" role="img" aria-label="猫爪线稿简笔画" data-i18n-aria="ui.pawAria">
-      <svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="2.46" stroke-linecap="round" stroke-linejoin="round">
-        <path stroke-width="2.95" d="M37.7 22.6C38.4 22.6 40.3 22.3 41.4 22.4C42.6 22.5 43.5 22.7 44.8 23.2C46.0 23.7 47.8 24.5 49.2 25.4C50.6 26.2 52.4 28.0 53.2 28.5C54.1 28.9 53.2 28.8 54.3 28.3C55.5 27.7 58.0 26.1 59.9 25.5C61.7 24.8 63.9 24.4 65.4 24.2C66.9 24.1 67.4 24.1 68.7 24.5C70.1 24.8 72.3 25.6 73.5 26.4C74.8 27.1 75.2 27.6 76.0 28.7C76.8 29.7 77.8 31.3 78.3 32.7C78.8 34.1 79.0 35.7 79.1 37.2C79.2 38.6 78.8 40.4 78.8 41.2C78.8 42.1 78.8 42.0 79.0 42.3C79.3 42.7 79.1 42.9 80.2 43.4C81.2 44.0 84.1 45.0 85.4 45.7C86.6 46.3 86.7 46.4 87.6 47.5C88.4 48.5 89.9 50.6 90.6 51.9C91.3 53.2 91.6 53.9 91.8 55.2C92.0 56.6 92.1 58.6 91.8 60.0C91.5 61.5 90.9 62.8 90.2 64.1C89.4 65.4 89.0 66.4 87.2 67.7C85.4 69.0 81.0 71.0 79.6 71.9C78.3 72.8 79.3 72.2 79.1 73.0C79.0 73.7 79.1 75.2 78.9 76.3C78.7 77.3 78.7 77.8 77.9 79.2C77.2 80.7 75.5 83.7 74.4 85.1C73.3 86.6 72.5 87.1 71.3 88.0C70.1 88.9 68.7 89.8 67.3 90.6C65.8 91.3 64.5 91.8 62.5 92.4C60.4 92.9 57.2 93.4 55.1 93.7C52.9 94.0 52.4 94.3 49.6 94.0C46.7 93.7 41.2 92.7 38.1 91.9C35.0 91.2 33.1 90.2 31.1 89.3C29.1 88.4 27.6 87.3 26.3 86.4C25.0 85.5 24.4 84.9 23.5 83.7C22.6 82.4 21.4 80.2 20.8 78.9C20.2 77.5 20.1 76.9 20.0 75.5C20.0 74.2 20.5 71.8 20.6 70.7C20.6 69.7 21.1 69.9 20.2 69.3C19.4 68.6 16.9 67.6 15.6 66.7C14.3 65.9 13.5 65.1 12.6 64.1C11.7 63.1 10.9 62.0 10.2 60.8C9.6 59.6 9.1 58.0 8.7 56.7C8.4 55.4 8.3 54.1 8.2 53.0C8.2 52.0 8.2 51.4 8.5 50.4C8.7 49.5 9.1 48.2 9.6 47.1C10.1 46.1 10.6 45.1 11.3 44.2C12.0 43.3 12.8 42.5 13.8 41.7C14.7 41.0 15.4 40.4 17.1 39.6C18.8 38.9 22.8 38.0 24.1 37.4C25.4 36.8 24.8 36.8 25.0 36.1C25.2 35.3 25.1 34.0 25.4 33.1C25.6 32.2 25.6 31.9 26.2 30.9C26.8 29.9 27.6 28.3 28.7 27.2C29.8 26.1 31.5 24.9 32.9 24.1C34.4 23.4 36.6 22.9 37.4 22.7C38.2 22.4 37.1 22.7 37.7 22.6Z"/>
-        <path stroke-width="2.74" d="M48.8 53.6C49.8 53.6 52.9 53.4 54.3 53.6C55.8 53.8 56.7 54.3 57.7 54.8C58.6 55.2 58.9 55.3 59.9 56.1C60.9 56.9 62.7 58.2 63.8 59.7C64.9 61.2 65.9 63.7 66.5 65.2C67.1 66.7 67.1 67.8 67.3 68.9C67.4 70.0 67.4 70.7 67.3 71.9C67.1 73.0 66.7 74.6 66.3 75.5C65.9 76.5 65.4 77.1 64.8 77.8C64.3 78.4 63.8 78.8 63.2 79.3C62.6 79.9 62.0 80.3 61.0 80.8C60.0 81.3 58.7 82.0 57.3 82.5C55.9 82.9 54.2 83.2 52.5 83.3C50.8 83.4 49.1 83.4 47.3 83.3C45.6 83.1 43.6 82.8 42.2 82.4C40.7 82.0 39.5 81.6 38.5 81.1C37.5 80.7 36.9 80.4 36.3 79.9C35.6 79.4 35.0 78.8 34.5 78.1C34.0 77.5 33.6 76.8 33.3 75.9C32.9 75.0 32.6 73.8 32.6 72.6C32.5 71.4 32.8 70.2 33.1 68.9C33.4 67.6 34.0 66.0 34.5 64.8C35.1 63.7 35.8 62.8 36.4 61.9C37.0 61.0 37.3 60.5 38.1 59.7C39.0 58.8 40.4 57.6 41.4 56.8C42.5 56.1 43.2 55.6 44.4 55.1C45.6 54.6 47.7 54.0 48.4 53.7C49.2 53.5 47.8 53.6 48.8 53.6Z"/>
-        <path stroke-width="2.95" d="M18.5 12.7C18.9 12.7 19.9 12.5 20.4 12.6C20.9 12.7 21.1 12.9 21.4 13.3C21.7 13.6 22.0 14.0 22.2 14.6C22.4 15.2 22.6 15.8 22.7 16.9C22.8 18.0 23.0 20.3 22.8 21.3C22.7 22.2 22.3 22.2 21.9 22.6C21.5 22.9 21.1 23.2 20.4 23.5C19.7 23.8 18.5 24.1 17.4 24.2C16.4 24.3 15.1 24.3 14.1 24.1C13.2 23.9 12.3 23.5 11.7 22.9C11.1 22.4 10.7 21.5 10.5 20.9C10.4 20.3 10.6 19.9 10.8 19.4C11.0 19.0 11.2 18.5 11.9 18.2C12.6 17.8 14.5 17.7 15.2 17.4C15.9 17.2 15.9 17.4 16.2 16.8C16.5 16.2 16.8 14.6 17.2 13.9C17.5 13.2 18.0 13.1 18.2 12.9C18.5 12.7 18.2 12.7 18.5 12.7Z"/>
-        <path stroke-width="2.46" d="M26.3 47.0C26.7 46.9 27.5 46.8 28.1 46.9C28.8 47.0 29.4 47.2 30.0 47.7C30.6 48.2 31.5 49.1 31.9 49.7C32.4 50.3 32.4 50.6 32.5 51.2C32.5 51.8 32.3 52.7 32.1 53.4C31.9 54.1 31.7 54.6 31.2 55.2C30.7 55.9 29.8 57.0 29.1 57.5C28.5 58.0 28.1 58.2 27.4 58.4C26.7 58.6 25.9 58.6 25.2 58.5C24.5 58.4 23.6 58.1 23.0 57.6C22.3 57.1 21.8 56.3 21.4 55.6C21.0 54.9 20.7 54.1 20.7 53.4C20.6 52.7 21.0 51.9 21.3 51.2C21.6 50.5 22.0 49.9 22.5 49.3C22.9 48.8 23.5 48.2 24.1 47.9C24.7 47.5 25.6 47.2 25.9 47.1C26.3 46.9 25.9 47.0 26.3 47.0Z"/>
-        <path stroke-width="2.30" d="M41.1 31.8C41.5 31.8 42.5 31.6 43.3 31.8C44.0 31.9 44.9 32.3 45.5 32.7C46.1 33.1 46.5 33.5 47.0 34.2C47.4 34.9 47.9 36.3 48.1 37.2C48.2 38.0 48.1 38.7 47.9 39.4C47.7 40.1 47.3 40.7 46.9 41.2C46.4 41.8 45.8 42.3 45.1 42.8C44.5 43.2 43.7 43.5 42.9 43.7C42.1 43.9 41.0 43.8 40.3 43.7C39.6 43.6 39.4 43.5 38.8 43.1C38.3 42.8 37.6 42.2 37.1 41.6C36.6 41.0 36.2 40.1 35.9 39.4C35.7 38.6 35.7 38.0 35.9 37.2C36.1 36.4 36.4 35.3 36.9 34.6C37.4 33.8 38.2 33.1 38.8 32.7C39.5 32.2 40.3 32.1 40.7 31.9C41.1 31.8 40.6 31.9 41.1 31.8Z"/>
-        <path stroke-width="2.30" d="M63.6 34.8C64.0 34.8 65.1 34.7 65.8 34.9C66.5 35.1 67.4 35.6 68.0 36.1C68.6 36.5 69.1 36.9 69.5 37.5C69.9 38.1 70.2 39.0 70.4 39.7C70.5 40.5 70.6 41.3 70.4 42.0C70.3 42.6 70.0 43.2 69.6 43.8C69.2 44.4 68.6 45.1 68.0 45.5C67.4 46.0 66.7 46.4 65.8 46.6C64.9 46.8 63.7 46.8 62.8 46.7C62.0 46.5 61.2 46.1 60.6 45.7C60.0 45.3 59.5 44.8 59.1 44.2C58.7 43.5 58.4 42.7 58.2 42.0C58.0 41.2 58.0 40.5 58.1 39.7C58.3 39.0 58.7 38.2 59.1 37.5C59.5 36.9 59.9 36.4 60.6 36.0C61.3 35.6 62.7 35.1 63.2 34.9C63.7 34.7 63.1 34.8 63.6 34.8Z"/>
-        <path stroke-width="2.21" d="M74.3 51.1C74.6 51.0 75.5 50.8 76.1 50.8C76.7 50.9 77.4 51.0 78.0 51.3C78.6 51.6 79.3 52.2 79.7 52.7C80.2 53.1 80.4 53.5 80.6 54.1C80.9 54.8 81.2 56.0 81.2 56.7C81.3 57.4 81.2 57.7 81.0 58.2C80.7 58.7 80.2 59.5 79.8 59.9C79.3 60.4 78.9 60.6 78.3 60.8C77.8 61.1 77.2 61.3 76.5 61.3C75.8 61.3 74.9 61.3 74.3 61.0C73.6 60.8 73.0 60.4 72.5 60.0C72.1 59.6 71.9 59.2 71.6 58.6C71.3 58.0 71.0 57.0 70.9 56.4C70.8 55.7 70.8 55.2 71.1 54.5C71.3 53.8 71.7 52.9 72.2 52.3C72.7 51.8 73.6 51.4 73.9 51.2C74.3 51.0 73.9 51.1 74.3 51.1Z"/>
-        <path stroke-width="2.30" d="M52.5 6.1C52.9 6.0 54.2 5.9 54.7 6.0C55.2 6.1 55.4 6.4 55.6 6.6C55.8 6.9 56.2 6.9 56.1 7.6C56.0 8.4 55.8 9.7 55.2 11.0C54.6 12.2 53.3 14.3 52.7 15.0C52.0 15.6 52.3 15.2 51.4 14.9C50.5 14.6 48.3 13.7 47.3 13.1C46.4 12.6 46.2 12.2 45.8 11.7C45.5 11.2 45.3 10.6 45.2 10.2C45.2 9.8 45.3 9.4 45.5 9.1C45.7 8.8 46.0 8.5 46.3 8.3C46.6 8.1 46.7 8.0 47.3 8.1C47.9 8.1 49.1 8.7 49.9 8.4C50.7 8.1 51.8 6.6 52.2 6.2C52.6 5.8 52.1 6.1 52.5 6.1Z"/>
-      </svg>
-    </div>
     <div class="aka">aka <b>Cuprum</b> · 水瓶座 · INTJ-A</div>
     <p class="tagline" id="hero-tagline">这个人很懒，什么也没有留下～</p>
     <div class="type-wrap"><span id="type"></span><span class="cursor"></span></div>
-    <div class="btn-row">
-      <a class="btn btn-primary" href="#chat" onclick="openChat()" data-i18n="hero.chat">🤖 数字分身</a>
-      <a class="btn btn-ghost" href="#contact" data-i18n="hero.contact">联系我</a>
-    </div>
   </div>
   <div class="scroll-hint"><div class="mouse"></div><span data-i18n="hero.scroll">向下滚动</span></div>
 </section>
@@ -774,18 +948,18 @@ audio#bgm{display:none}
     <div class="about-grid">
       <div class="card about-text reveal" id="about-text"></div>
       <div class="about-meta reveal" id="about-meta"></div>
-      <div class="traits reveal" id="traits"></div>
     </div>
   </div>
 </section>
 
-<!-- ====== 技能 ====== -->
+<!-- ====== 爱好 ====== -->
 <section id="skills">
   <div class="container">
     <div class="section-head reveal">
-      <div class="kicker" data-i18n="sec.skills.kicker">Skills</div>
-      <h2 data-i18n="sec.skills.title">技能与才艺</h2>
+      <div class="kicker" data-i18n="sec.skills.kicker">Hobbies</div>
+      <h2 data-i18n="sec.skills.title">爱好</h2>
       <p data-i18n="sec.skills.desc">一点点拿得出手的本事</p>
+      <p class="sec-hint" data-i18n="sec.skills.hint">点击模块了解更多</p>
     </div>
     <div class="skills-grid" id="skills-grid"></div>
   </div>
@@ -873,6 +1047,40 @@ audio#bgm{display:none}
 </footer>
 
 </div><!-- /#page -->
+
+<!-- ============================================================
+     爱好画廊：点击「爱好」任意一张卡片，跳转到该项的专属画廊
+     · 路由：#/gallery/<gid>（piano / guitar / drawing / photo），浏览器前进后退可用
+     · 图片与文字内容后续按指令填充（见脚本内 GALLERY_CONTENT）
+     ============================================================ -->
+<div class="gallery-view" id="gallery-view" hidden role="region" aria-labelledby="gallery-title">
+  <div class="gallery-bar">
+    <button class="gallery-back" id="gallery-back" type="button"><span aria-hidden="true">←</span><span id="gallery-back-txt">返回</span></button>
+    <span class="gallery-crumb" id="gallery-crumb">爱好 · 画廊</span>
+    <span class="gallery-nav">
+      <button id="gallery-prev" type="button" aria-label="上一个">‹</button>
+      <span class="gallery-count" id="gallery-count"></span>
+      <button id="gallery-next" type="button" aria-label="下一个">›</button>
+    </span>
+  </div>
+  <div class="gallery-inner">
+    <header class="gallery-head">
+      <div class="gallery-ico" id="gallery-ico">🎹</div>
+      <div>
+        <p class="gallery-kicker" id="gallery-kicker">Gallery</p>
+        <h1 class="gallery-title" id="gallery-title">钢琴</h1>
+        <p class="gallery-sub" id="gallery-sub"></p>
+      </div>
+    </header>
+    <section class="gallery-sec">
+      <div class="gallery-prose" id="gallery-prose"></div>
+    </section>
+    <section class="gallery-sec">
+      <div class="gallery-grid" id="gallery-grid"></div>
+    </section>
+  </div>
+</div>
+
 
 <!-- ============================================================
      反馈箱：复刻 https://puyuesun.github.io/spy-personal-homepage/ 的意见反馈箱
@@ -1187,7 +1395,7 @@ audio#bgm{display:none}
       <div class="fb-shell" id="fb-shell">
         <div class="fb-shell__glow" aria-hidden="true"></div>
         <div class="fb-shell__main">
-          <textarea id="fb-text" name="message" maxlength="1000" required placeholder="例如：手机上「技能」这块字有点小，要放大才看得清；或者：某个按钮点了没反应。" data-i18n-ph="fb.textPh" aria-describedby="fb-num fb-status"></textarea>
+          <textarea id="fb-text" name="message" maxlength="1000" required placeholder="例如：手机上「爱好」这块字有点小，要放大才看得清；或者：某个按钮点了没反应。" data-i18n-ph="fb.textPh" aria-describedby="fb-num fb-status"></textarea>
         </div>
       </div>
 
@@ -1239,6 +1447,19 @@ audio#bgm{display:none}
   </div>
 </dialog>
 
+<!-- ====== 页脚小入口弹窗：关于本站 / 更新记录（内容由 JS 按当前语言渲染） ====== -->
+<dialog class="doc-dialog" id="doc-dialog" aria-labelledby="doc-title">
+  <div class="doc-card">
+    <button class="doc-x" id="doc-close" type="button" aria-label="关闭">×</button>
+    <header class="doc-head">
+      <p class="doc-kicker" id="doc-kicker">About</p>
+      <h3 class="doc-title" id="doc-title">关于本站</h3>
+      <p class="doc-sub" id="doc-sub"></p>
+    </header>
+    <div class="doc-body" id="doc-body"></div>
+  </div>
+</dialog>
+
 <script>
 /* ============================================================
    ① 个人资料数据
@@ -1269,15 +1490,14 @@ const DEFAULT = {
     {ico:"🐱",k:"动物塑",v:"猫"},
     {ico:"✨",k:"记忆点",v:"萌"}
   ],
-  traits:[
-    {ico:"🎨",k:"兴趣",v:"绘画 · 阅读 · 音乐 · 品鉴美食"},
-    {ico:"🎹",k:"擅长",v:"音乐 · 绘画"}
-  ],
   skills:[
-    {ico:"🎹",name:"钢琴",desc:"在黑白的琴键上，弹得出温柔也弹得出热烈。"},
-    {ico:"🎸",name:"吉他",desc:"抱上吉他，我就是快乐的民谣小孩。"},
-    {ico:"🖌️",name:"手绘",desc:"一支笔，把心里的小世界画出来。"},
-    {ico:"🎨",name:"P图 / 修图",desc:"把照片调成理想中的样子，强迫症福音。"}
+    {gid:"piano",ico:"🎹",name:"钢琴",desc:"在黑白的琴键上，弹得出温柔也弹得出热烈。"},
+    {gid:"guitar",ico:"🎸",name:"吉他",desc:"抱上吉他，我就是快乐的民谣小孩。"},
+    {gid:"music",ico:"🎵",name:"音乐",desc:"耳机一戴，华语、J-pop、电音都想听一点。"},
+    {gid:"drawing",ico:"🖌️",name:"手绘",desc:"一支笔，把心里的小世界画出来。"},
+    {gid:"cosplay",ico:"🎭",name:"cosplay",desc:"换上装扮，我就变成了喜欢的角色，认真又快乐。"},
+    {gid:"photography",ico:"📷",name:"摄影",desc:"用镜头留住当下的光与情绪。"},
+    {gid:"food",ico:"🍽️",name:"品鉴美食",desc:"吃得出好与不好，也愿意为一顿好吃的专程跑一趟。"}
   ],
   projects:[],
   timeline:[
@@ -1287,8 +1507,7 @@ const DEFAULT = {
     {role:"天津市南开中学",co:"高中",time:"2023年 - 2026年",desc:"就读于天津市南开中学。"},
     {role:"天津大学香港理工大学深圳未来技术学院",co:"大学",time:"2026年 - 2030年",desc:"就读于天津大学香港理工大学深圳未来技术学院。"}
   ],
-  recent:"学习新知识 · 做学生工作 · 探索深圳",
-  strengths:"音乐与绘画"
+  recent:"学习新知识 · 做学生工作 · 探索深圳"
 };
 
 /* 页面内容完全来自本文件（编辑功能与本地存储覆盖已移除）。
@@ -1321,15 +1540,14 @@ const PROFILE = {
       {ico:"🐱",k:"動物塑",v:"貓"},
       {ico:"✨",k:"記憶點",v:"萌"}
     ],
-    traits:[
-      {ico:"🎨",k:"興趣",v:"繪畫 · 閱讀 · 音樂 · 品鑑美食"},
-      {ico:"🎹",k:"擅長",v:"音樂 · 繪畫"}
-    ],
     skills:[
-      {ico:"🎹",name:"鋼琴",desc:"在黑白的琴鍵上，彈得出溫柔也彈得出熱烈。"},
-      {ico:"🎸",name:"吉他",desc:"抱上吉他，我就是快樂的民謠小孩。"},
-      {ico:"🖌️",name:"手繪",desc:"一支筆，把心裡的小世界畫出來。"},
-      {ico:"🎨",name:"P圖 / 修圖",desc:"把照片調成理想中的樣子，強迫症福音。"}
+      {gid:"piano",ico:"🎹",name:"鋼琴",desc:"在黑白的琴鍵上，彈得出溫柔也彈得出熱烈。"},
+      {gid:"guitar",ico:"🎸",name:"吉他",desc:"抱上吉他，我就是快樂的民謠小孩。"},
+      {gid:"music",ico:"🎵",name:"音樂",desc:"耳機一戴，華語、J-pop、電音都想聽一點。"},
+      {gid:"drawing",ico:"🖌️",name:"手繪",desc:"一支筆，把心裡的小世界畫出來。"},
+      {gid:"cosplay",ico:"🎭",name:"cosplay",desc:"換上裝扮，我就變成了喜歡的角色，認真又快樂。"},
+      {gid:"photography",ico:"📷",name:"攝影",desc:"用鏡頭留住當下的光與情緒。"},
+      {gid:"food",ico:"🍽️",name:"品鑒美食",desc:"吃得出好與不好，也願意為一頓好吃的專程跑一趟。"}
     ],
     projects:[],
     timeline:[
@@ -1339,17 +1557,16 @@ const PROFILE = {
       {role:"天津市南開中學",co:"高中",time:"2023年 - 2026年",desc:"就讀於天津市南開中學。"},
       {role:"天津大學香港理工大學深圳未來技術學院",co:"大學",time:"2026年 - 2030年",desc:"就讀於天津大學香港理工大學深圳未來技術學院。"}
     ],
-    recent:"學習新知識 · 做學生工作 · 探索深圳",
-    strengths:"音樂與繪畫"
+    recent:"學習新知識 · 做學生工作 · 探索深圳"
   },
   en:{
-    name:"Wantong", nickname:"Cuprum", role:"Student",
+    name:"Wang Tong", nickname:"Cuprum", role:"Student",
     city:"Tianjin / Shenzhen, Guangdong", birthday:"February 14", zodiac:"Aquarius",
     mbti:"INTJ-A", animal:"cat", memory:"cute",
     tagline:"This person is lazy and left nothing behind~",
     signature:"Cuprum",
     about:[
-      "Hi there, I'm <b>Wantong</b> — you can also call me Cuprum. Just an ordinary student, with a little bit of cuteness, as the name suggests.",
+      "Hi there, I'm <b>Wang Tong</b> — you can also call me Cuprum. Just an ordinary student, with a little bit of cuteness, as the name suggests.",
       "An <b>Aquarius</b> born on <b>February 14</b>, and reportedly an <b>atypical INTJ-A</b> — sounds aloof, but really there's a kitten living inside, wrapped in a very <b>cute</b> exterior.",
       "Right now I'm studying in <b>Tianjin</b> and often staying in <b>Shenzhen, Guangdong</b>. Lately I'm busy <b>learning new things and doing student work</b>, and I spend my spare time <b>exploring Shenzhen</b>.",
       "In short: lazy but serious; looks innocent, but actually gets it."
@@ -1368,15 +1585,14 @@ const PROFILE = {
       {ico:"🐱",k:"Animal",v:"Cat"},
       {ico:"✨",k:"Signature trait",v:"Cute"}
     ],
-    traits:[
-      {ico:"🎨",k:"Interests",v:"Drawing · Reading · Music · Good food"},
-      {ico:"🎹",k:"Good at",v:"Music · Drawing"}
-    ],
     skills:[
-      {ico:"🎹",name:"Piano",desc:"On the black and white keys I can play tenderness, and passion too."},
-      {ico:"🎸",name:"Guitar",desc:"Grab the guitar and I'm a happy little folk kid."},
-      {ico:"🖌️",name:"Hand drawing",desc:"One pen, and the little world in my head comes out on paper."},
-      {ico:"🎨",name:"Photo editing",desc:"Tuning photos into exactly the look I want — a joy for perfectionists."}
+      {gid:"piano",ico:"🎹",name:"Piano",desc:"On the black and white keys I can play tenderness, and passion too."},
+      {gid:"guitar",ico:"🎸",name:"Guitar",desc:"Grab the guitar and I'm a happy little folk kid."},
+      {gid:"music",ico:"🎵",name:"Music",desc:"Headphones on — a little Mandopop, J-pop and EDM, please."},
+      {gid:"drawing",ico:"🖌️",name:"Hand drawing",desc:"One pen, and the little world in my head comes out on paper."},
+      {gid:"cosplay",ico:"🎭",name:"cosplay",desc:"Put on a costume and I become the character I love — serious about it, and happy."},
+      {gid:"photography",ico:"📷",name:"Photography",desc:"Keeping the light and mood of a moment through the lens."},
+      {gid:"food",ico:"🍽️",name:"Food tasting",desc:"I can tell good food from bad, and I'll travel across town for a great meal."}
     ],
     projects:[],
     timeline:[
@@ -1386,8 +1602,7 @@ const PROFILE = {
       {role:"Tianjin Nankai High School",co:"High school",time:"2023 – 2026",desc:"Studied at Tianjin Nankai High School."},
       {role:"TJU–PolyU Shenzhen Future Technology Institute",co:"University",time:"2026 – 2030",desc:"Studying at the TJU–PolyU Shenzhen Future Technology Institute."}
     ],
-    recent:"learning new things · student work · exploring Shenzhen",
-    strengths:"Music & drawing"
+    recent:"learning new things · student work · exploring Shenzhen"
   }
 };
 function profileFor(code){ return PROFILE[code] || PROFILE["zh-CN"]; }
@@ -1405,10 +1620,10 @@ const LANGS = [
 
 const I18N = {
   "zh-CN":{
-    nav:{about:"关于",skills:"技能",projects:"项目",exp:"经历",contact:"联系",chat:"🤖 数字分身",music:"音乐"},
-    hero:{chat:"🤖 数字分身",contact:"联系我",scroll:"向下滚动"},
+    nav:{about:"关于",skills:"爱好",projects:"项目",exp:"经历",contact:"联系",chat:"🤖 数字分身",chatJump:"数字分身",chatJumpAria:"跳转到数字分身聊天",sideAria:"页面导引",top:"回到顶部",topAria:"回到顶部",music:"音乐"},
+    hero:{scroll:"向下滚动"},
     sec:{about:{kicker:"About",title:"关于我",desc:"认识一下这个有点萌的本人"},
-      skills:{kicker:"Skills",title:"技能与才艺",desc:"一点点拿得出手的本事"},
+      skills:{kicker:"Hobbies",title:"爱好",desc:"一点点拿得出手的本事",hint:"点击模块了解更多"},
       projects:{kicker:"Projects",title:"项目 / 作品",desc:"一些做过或正在做的事"},
       exp:{kicker:"Experience",title:"经历",desc:"一路走来的轨迹"},
       contact:{kicker:"Contact",title:"联系我",desc:"欢迎交流、合作或闲聊"},
@@ -1416,18 +1631,20 @@ const I18N = {
     contact:{title:"来和 Cuprum 说说话",desc:"以上信息已公开，欢迎随时联系。"},
     chat:{online:"在线 · 已记住你的全部信息",status:"在线",placeholder:"和我说点什么...",clear:"清空对话",quick:"想聊什么？",rate:"说得有点快啦，让我歇一分钟再聊～"},
     bot:{welcome:"嗨，我是 Cuprum 的数字分身，记得自己所有的资料。想聊什么，直接问～",
-      fallback:"唔，这个我还没学到呢～问我<b>兴趣、技能、性格、联系方式</b>这些我会的！(๑•̀ㅂ•́)و✧",
+      fallback:"唔，这个我还没学到呢～问我<b>爱好、性格、联系方式</b>这些我会的！(๑•̀ㅂ•́)و✧",
       blocked:"这个问题有点超出我该聊的范围啦，我们换个轻松的，聊聊<b>音乐绘画、我的日常或我本人</b>吧～(´･ω･`)"},
     ui:{
       who:"Cuprum · 数字分身", send:"发送", close:"关闭", siteTag:"个人主页", avatar:"分身",
-      sigAria:"个人签名：", pawAria:"猫爪线稿简笔画", askMe:"问我",
+      sigAria:"个人签名：", askMe:"问我",
       made:'用心 <span class="heart">❤</span> 打造',
-      desc:"王童 (Cuprum) 的个人主页：关于、技能、项目、经历与数字分身聊天。",
-      emptySkills:"暂无技能",
+      desc:"王童 (Cuprum) 的个人主页：关于、爱好、项目、经历与数字分身聊天。",
+      emptySkills:"暂无爱好",
       emptyProjects:"“项目/作品”还在草稿箱里，敬请期待~",
       tlRole:"学生时代 · 进行中", tlTime:"现在",
       tlDesc:"目前是 {name} 本人，正在 {recent}。"
     },
+    foot:{about:"关于本站",updates:"更新记录"},
+    gallery:{crumb:"爱好 · 画廊",enter:"查看画廊",back:"返回",images:"图片",text:"文字",emptyImages:"图片正在路上，很快就补上 ~",emptyText:"文字介绍稍后补充 ~",prev:"上一个",next:"下一个",notFound:"没有找到这个画廊",count:"{i} / {n}"},
     theme:{cyber:"赛博蓝紫",coral:"落日橙",mint:"薄荷青绿",sakura:"樱花粉",gold:"鎏金暖阳",midnight:"午夜蓝",crimson:"暗红",mono:"黑白灰"},
     boot:{soundTitle:"音效开关",skipTitle:"跳过启动动画",chipAria:"点击芯片进入个人主页",
       sub:'点击 <b>芯片</b> · 接入个人主页', tip:'按 Enter 或点击「跳过」快速进入',
@@ -1446,7 +1663,7 @@ const I18N = {
       device:"你的设备类型", deviceAuto:"自动识别", devicePc:"电脑", devicePhone:"手机",
       deviceTablet:"平板", deviceHint:"由浏览器自动识别，无需填写。",
       otherHint:"选了「其他」就补一句具体内容。",
-      text:"反馈内容", textPh:"例如：手机上「技能」这块字有点小，要放大才看得清；或者：某个按钮点了没反应。",
+      text:"反馈内容", textPh:"例如：手机上「爱好」这块字有点小，要放大才看得清；或者：某个按钮点了没反应。",
       textHint:"越具体越好：哪个位置、什么体验、你期望的样子。",
       send:"提交反馈", sending:"提交中…", auto:"提交时会自动带上时间，你不需要填。",
       errNick:"请先留个称呼，方便我知道是你", errOther:"选了「其他」的话，请在后面补一句具体内容",
@@ -1478,10 +1695,10 @@ const I18N = {
     }
   },
   "zh-TW":{
-    nav:{about:"關於",skills:"技能",projects:"項目",exp:"經歷",contact:"聯繫",chat:"🤖 數字分身",music:"音樂"},
-    hero:{chat:"🤖 數字分身",contact:"聯繫我",scroll:"向下滾動"},
+    nav:{about:"關於",skills:"愛好",projects:"項目",exp:"經歷",contact:"聯繫",chat:"🤖 數字分身",chatJump:"數字分身",chatJumpAria:"跳轉到數字分身聊天",sideAria:"頁面導引",top:"回到頂端",topAria:"回到頂端",music:"音樂"},
+    hero:{scroll:"向下滾動"},
     sec:{about:{kicker:"About",title:"關於我",desc:"認識一下這個有點萌的本尊"},
-      skills:{kicker:"Skills",title:"技能與才藝",desc:"一點點拿得出手的本事"},
+      skills:{kicker:"Hobbies",title:"愛好",desc:"一點點拿得出手的本事",hint:"點擊模組了解更多"},
       projects:{kicker:"Projects",title:"項目 / 作品",desc:"一些做過或正在做的事"},
       exp:{kicker:"Experience",title:"經歷",desc:"一路走來的軌跡"},
       contact:{kicker:"Contact",title:"聯絡我",desc:"歡迎交流、合作或閒聊"},
@@ -1489,18 +1706,20 @@ const I18N = {
     contact:{title:"來和 Cuprum 說說話",desc:"以上資訊已公開，歡迎隨時聯絡。"},
     chat:{online:"在線 · 已記住你的全部資訊",status:"在線",placeholder:"和我說點什麼...",clear:"清空對話",quick:"想聊什麼？",rate:"說得有點快啦，讓我歇一分鐘再聊～"},
     bot:{welcome:"嗨，我是 Cuprum 的數字分身，記得自己所有的資料。想聊什麼，直接問～",
-      fallback:"唔，這個我還沒學到呢～問我<b>興趣、技能、性格、聯絡方式</b>這些我會的！(๑•̀ㅂ•́)و✧",
+      fallback:"唔，這個我還沒學到呢～問我<b>愛好、性格、聯絡方式</b>這些我會的！(๑•̀ㅂ•́)و✧",
       blocked:"這個問題有點超出我該聊的範圍啦，我們換個輕鬆的，聊聊<b>音樂繪畫、我的日常或我本人</b>吧～(´･ω･`)"},
     ui:{
       who:"Cuprum · 數字分身", send:"傳送", close:"關閉", siteTag:"個人主頁", avatar:"分身",
-      sigAria:"個人簽名：", pawAria:"貓爪線稿簡筆畫", askMe:"問我",
+      sigAria:"個人簽名：", askMe:"問我",
       made:'用心 <span class="heart">❤</span> 打造',
-      desc:"王童 (Cuprum) 的個人主頁：關於、技能、項目、經歷與數字分身聊天。",
-      emptySkills:"暫無技能",
+      desc:"王童 (Cuprum) 的個人主頁：關於、愛好、項目、經歷與數字分身聊天。",
+      emptySkills:"暫無愛好",
       emptyProjects:"「項目 / 作品」還在草稿箱裡，敬請期待~",
       tlRole:"學生時代 · 進行中", tlTime:"現在",
       tlDesc:"目前是 {name} 本尊，正在 {recent}。"
     },
+    foot:{about:"關於本站",updates:"更新記錄"},
+    gallery:{crumb:"愛好 · 畫廊",enter:"查看畫廊",back:"返回",images:"圖片",text:"文字",emptyImages:"圖片正在路上，很快就補上 ~",emptyText:"文字介紹稍後補充 ~",prev:"上一個",next:"下一個",notFound:"沒有找到這個畫廊",count:"{i} / {n}"},
     theme:{cyber:"賽博藍紫",coral:"落日橙",mint:"薄荷青綠",sakura:"櫻花粉",gold:"鎏金暖陽",midnight:"午夜藍",crimson:"暗紅",mono:"黑白灰"},
     boot:{soundTitle:"音效開關",skipTitle:"跳過啟動動畫",chipAria:"點擊晶片進入個人主頁",
       sub:'點擊 <b>晶片</b> · 接入個人主頁', tip:'按 Enter 或點擊「跳過」快速進入',
@@ -1519,7 +1738,7 @@ const I18N = {
       device:"你的裝置類型", deviceAuto:"自動識別", devicePc:"電腦", devicePhone:"手機",
       deviceTablet:"平板", deviceHint:"由瀏覽器自動識別，無需填寫。",
       otherHint:"選了「其他」就補一句具體內容。",
-      text:"回饋內容", textPh:"例如：手機上「技能」這塊字有點小，要放大才看得清；或者：某個按鈕點了沒反應。",
+      text:"回饋內容", textPh:"例如：手機上「愛好」這塊字有點小，要放大才看得清；或者：某個按鈕點了沒反應。",
       textHint:"越具體越好：哪個位置、什麼體驗、你期望的樣子。",
       send:"送出回饋", sending:"送出中…", auto:"送出時會自動附上時間，你不需要填。",
       errNick:"請先留個稱呼，方便我知道是你", errOther:"選了「其他」的話，請在後面補一句具體內容",
@@ -1553,10 +1772,10 @@ const I18N = {
 };
 // 其他语言回退到英文
 I18N.en = {
-  nav:{about:"About",skills:"Skills",projects:"Projects",exp:"Timeline",contact:"Contact",chat:"🤖 AI Avatar",music:"Music"},
-  hero:{chat:"🤖 AI Avatar",contact:"Contact me",scroll:"Scroll down"},
+  nav:{about:"About",skills:"Hobbies",projects:"Projects",exp:"Timeline",contact:"Contact",chat:"🤖 AI Avatar",chatJump:"Avatar",chatJumpAria:"Jump to the AI avatar chat",sideAria:"Page navigation",top:"Back to top",topAria:"Back to top",music:"Music"},
+  hero:{scroll:"Scroll down"},
   sec:{about:{kicker:"About",title:"About Me",desc:"Meet this mildly adorable human"},
-    skills:{kicker:"Skills",title:"Skills & Talents",desc:"A few things I do well"},
+    skills:{kicker:"Hobbies",title:"Hobbies",desc:"A few things I do well",hint:"Click a card to learn more"},
     projects:{kicker:"Projects",title:"Projects / Works",desc:"Things I built or am making"},
     exp:{kicker:"Experience",title:"Journey",desc:"The path so far"},
     contact:{kicker:"Contact",title:"Contact",desc:"Let's talk, collaborate or chat"},
@@ -1564,18 +1783,20 @@ I18N.en = {
   contact:{title:"Say hi to Cuprum",desc:"All info above is public. Feel free to reach out."},
   chat:{online:"Online · knows everything about me",status:"Online",placeholder:"Type something...",clear:"Clear chat",quick:"What would you like to know?",rate:"Whoa, slow down a little — give me a minute to catch up!"},
   bot:{welcome:"Hi, I'm Cuprum's digital avatar and I remember everything about me. Ask me anything!",
-    fallback:"Hmm, I haven't learned that yet. Ask me about <b>hobbies, skills, personality, or contact info</b> — things I actually know!",
+    fallback:"Hmm, I haven't learned that yet. Ask me about <b>hobbies, personality, or contact info</b> — things I actually know!",
     blocked:"Let's keep it light — that's a bit outside what I should chat about. How about <b>my music, art, daily life, or me</b>? (´･ω･`)"},
   ui:{
     who:"Cuprum · AI avatar", send:"Send", close:"Close", siteTag:"Homepage", avatar:"avatar",
-    sigAria:"Signature: ", pawAria:"Line drawing of a cat paw", askMe:"Ask me",
+    sigAria:"Signature: ", askMe:"Ask me",
     made:'made with <span class="heart">❤</span>',
-    desc:"Wantong (Cuprum)'s homepage: about, skills, projects, timeline and a chat with my AI avatar.",
-    emptySkills:"No skills yet",
+    desc:"Wang Tong (Cuprum)'s homepage: about, hobbies, projects, timeline and a chat with my AI avatar.",
+    emptySkills:"No hobbies yet",
     emptyProjects:"Projects are still in the drafts — stay tuned~",
     tlRole:"Student days · in progress", tlTime:"Now",
     tlDesc:"Currently {name} in person, busy with {recent}."
   },
+  foot:{about:"About this site",updates:"Changelog"},
+  gallery:{crumb:"Hobbies · Gallery",enter:"View gallery",back:"Back",images:"Images",text:"Text",emptyImages:"Images are on the way — coming soon ~",emptyText:"A written intro is coming soon ~",prev:"Previous",next:"Next",notFound:"Gallery not found",count:"{i} / {n}"},
   theme:{cyber:"Cyber blue",coral:"Sunset orange",mint:"Mint green",sakura:"Sakura pink",gold:"Gilded gold",midnight:"Midnight blue",crimson:"Crimson",mono:"Monochrome"},
   boot:{soundTitle:"Sound on/off",skipTitle:"Skip the intro",chipAria:"Tap the chip to enter my homepage",
     sub:'Tap the <b>chip</b> · enter my homepage', tip:'Press Enter or click SKIP to jump in',
@@ -1594,7 +1815,7 @@ I18N.en = {
     device:"Your device type", deviceAuto:"Auto-detected", devicePc:"Desktop", devicePhone:"Phone",
     deviceTablet:"Tablet", deviceHint:"Detected automatically by your browser — nothing to fill in.",
     otherHint:"If you picked \u201cOther\u201d, add a few words to say what it is.",
-    text:"Your feedback", textPh:"e.g. On my phone the Skills text is too small to read; or: a button did nothing when I tapped it.",
+    text:"Your feedback", textPh:"e.g. On my phone the Hobbies text is too small to read; or: a button did nothing when I tapped it.",
     textHint:"The more specific, the better: where it is, what happened, what you expected.",
     send:"Send feedback", sending:"Sending…", auto:"The time is attached automatically — you don't need to fill it in.",
     errNick:"Please leave a name so I know who this is", errOther:"You picked \u201cOther\u201d — please write what it is",
@@ -1693,6 +1914,8 @@ function applyLang(){
     el.setAttribute("title", t(...el.getAttribute("data-i18n-title").split(".")));
   });
   if(window.__fbRefresh) window.__fbRefresh();
+  if(window.__docRefresh) window.__docRefresh();
+  if(window.__galleryRefresh) window.__galleryRefresh();
   document.getElementById("lang-cur").textContent = LANGS.find(l=>l.code===lang)?.name || lang;
   const menu = document.getElementById("lang-menu");
   menu.innerHTML = LANGS.map(l=>`<button class="${l.code===lang?'on':''}" data-lang="${l.code}"><span>${l.flag} ${l.name}</span><span class="ck">✓</span></button>`).join("");
@@ -1730,21 +1953,17 @@ function renderSignatures(){
 }
 
 function renderAll(){
-  // brand
-  const logoNode = document.getElementById("nav-logo");
-  /* 只更新名字文本，保留已搬入的猫爪节点 */
-  let brandName = logoNode.querySelector("b");
-  if(!brandName){ brandName = document.createElement("b"); logoNode.appendChild(brandName); }
-  brandName.textContent = data.name || "Cuprum";
-  /* 猫爪线稿：从首屏搬到左上角「王童」右侧（已搬过则复用现有节点，幂等） */
-  const pawNode = logoNode.querySelector(".paw") || document.querySelector(".hero-inner .paw");
-  if(pawNode && pawNode.parentElement !== logoNode) logoNode.appendChild(pawNode);
   document.title = `${data.name} · ${data.nickname} | ${t("ui","siteTag")}`;
   const descNode = document.getElementById("meta-desc");
   if(descNode) descNode.setAttribute("content", t("ui","desc"));
   // footer
   const footNode = document.getElementById("foot-line");
-  if(footNode) footNode.innerHTML = `© ${new Date().getFullYear()} ${esc(data.name)} · ${esc(data.nickname)} · ${t("ui","made")}`;
+  if(footNode) footNode.innerHTML =
+    `<span class="foot-copy">© ${new Date().getFullYear()} ${esc(data.name)} · ${esc(data.nickname)}</span>`
+    + `<span class="foot-sep">|</span>`
+    + `<button type="button" class="foot-link" data-doc="about">${esc(t("foot","about"))}</button>`
+    + `<span class="foot-dot">·</span>`
+    + `<button type="button" class="foot-link" data-doc="updates">${esc(t("foot","updates"))}</button>`;
   // 个人签名（原头像位）
   renderSignatures();
   // hero
@@ -1754,10 +1973,12 @@ function renderAll(){
   // about
   document.getElementById("about-text").innerHTML = data.about.map(p=>`<p>${p}</p>`).join("");
   document.getElementById("about-meta").innerHTML = data.meta.map(m=>`<div class="meta-item"><span class="ico">${m.ico}</span><div><div class="k">${esc(m.k)}</div><div class="v">${esc(m.v)}</div></div></div>`).join("");
-  document.getElementById("traits").innerHTML = data.traits.map(n=>`<div class="trait"><div class="ico">${n.ico}</div><div class="k">${esc(n.k)}</div><div class="v">${esc(n.v)}</div></div>`).join("");
-  // skills
+  // skills（每张卡片跳转到该项专属画廊 #/gallery/<gid>）
   document.getElementById("skills-grid").innerHTML = data.skills.length
-    ? data.skills.map(s=>`<div class="card skill-card reveal"><div class="ico">${s.ico}</div><h3>${esc(s.name)}</h3><p>${esc(s.desc||'')}</p></div>`).join("")
+    ? data.skills.map(s=>{
+        const gid = s.gid || "";
+        return `<a class="card skill-card reveal" href="#/gallery/${esc(gid)}" data-gid="${esc(gid)}"><div class="ico">${s.ico}</div><h3>${esc(s.name)}</h3><p>${esc(s.desc||'')}</p><span class="skill-more">${esc(t("gallery","enter"))} <i>→</i></span></a>`;
+      }).join("")
     : `<div class="card empty-tip">${esc(t("ui","emptySkills"))}</div>`;
   // projects
   document.getElementById("projects-grid").innerHTML = data.projects.length
@@ -1810,13 +2031,18 @@ const BOT_INTENT = [
     en:(d)=>`I'm <b>${d.mbti}</b> — but an <b>atypical</b> one.<br>Supposedly cold and rational, yet people say I'm extremely <b>${d.memory}</b>. Rational inside, cute outside, get it? (￣▽￣)~*`
   },
   {
-    id:"hobby", keys:["兴趣","爱好","喜欢什么","平时做什么","爱做什么","hobby","hobbies","兴趣是什么"],
-    zh:(d)=>`我的快乐就这几样：<b>${d.traits[0].v}</b>～🎨<br>画画能安静、音乐能开心、看书能待一整天。哦，我还挺会<b>品鉴美食</b>的，算半个吃货？(｡•̀ᴗ-)✧`,
-    tw:(d)=>`我的快樂就這幾樣：<b>${d.traits[0].v}</b>～🎨<br>畫畫能安靜、音樂能開心、看書能待一整天。喔，我還挺會<b>品鑑美食</b>的，算半個吃貨？(｡•̀ᴗ-)✧`,
-    en:(d)=>`My happy places: <b>${d.traits[0].v}</b> 🎨<br>Drawing calms me, music cheers me, and a good book keeps me hooked all day. I'm also a decent <b>foodie</b>. (｡•̀ᴗ-)✧`
+    id:"hobby", keys:["兴趣","爱好","喜欢什么","喜欢做什么","平时做什么","平时喜欢","爱做什么","兴趣是什么","兴趣爱好","业余","空闲时间","打发时间",
+      "興趣","愛好","喜歡什麼","喜歡做什麼","平時做什麼","平時喜歡","愛做什麼","興趣是什麼","興趣愛好","業餘","空閒時間","打發時間",
+      "钢琴","吉他","音乐","听歌","歌手","唱歌","手绘","绘画","画画","板绘","插画","素描","水彩","摄影","拍照","照片","相片","写真","拍摄","cos","cosplay","角色扮演","漫展","二次元","第五人格",
+      "鋼琴","音樂","聽歌","手繪","繪畫","畫畫","板繪","插畫","攝影","寫真","拍攝","角色扮演","漫展",
+      "美食","吃货","吃","品鉴","探店","烘焙","咖啡","甜点","火锅","烧烤","吃貨","品鑒","品鑑","甜點","火鍋","燒烤",
+      "hobby","hobbies","interest","interests","pastime","piano","guitar","music","singing","drawing","painting","sketch","illustration","photography","photo","photos","cosplay","costume","food","foodie","cooking","baking","coffee","dessert"],
+    zh:(d)=>`兴趣爱好还挺多的：🎨<br>${d.skills.map(s=>`${s.ico||"✦"} <b>${s.name}</b>：${s.desc}`).join('<br>')}<br>点开「<b>爱好</b>」里任意卡片，还能进对应画廊看图～(｡•̀ᴗ-)✧`,
+    tw:(d)=>`興趣愛好還挺多的：🎨<br>${d.skills.map(s=>`${s.ico||"✦"} <b>${s.name}</b>：${s.desc}`).join('<br>')}<br>點開「<b>愛好</b>」裡任意卡片，還能進對應畫廊看圖～(｡•̀ᴗ-)✧`,
+    en:(d)=>`I've got quite a few hobbies: 🎨<br>${d.skills.map(s=>`${s.ico||"✦"} <b>${s.name}</b>: ${s.desc}`).join('<br>')}<br>Tap any card under <b>Hobbies</b> to open its gallery~ (｡•̀ᴗ-)✧`
   },
   {
-    id:"skill", keys:["技能","擅长","会什么","才艺","钢琴","吉他","手绘","绘图","p图","修图","skill","skills"],
+    id:"skill", keys:["技能","擅长","会什么","才艺","能做什么","拿手","本领","修图","p图","渲染","擅長","會什麼","才藝","能做什麼","本領","修圖","skill","skills","talent","talents","abilities"],
     zh:(d)=>`会一点，够自娱自乐～<br>${d.skills.map(s=>`🎵 <b>${s.name}</b>：${s.desc}`).join('<br>')}<br>不顶尖，但偶尔能惊艳一下别人。(๑˘︶˘๑)`,
     tw:(d)=>`會一點，夠自娛自樂～<br>${d.skills.map(s=>`🎵 <b>${s.name}</b>：${s.desc}`).join('<br>')}<br>不頂尖，但偶爾能驚豔一下別人。(๑˘︶˘๑)`,
     en:(d)=>`A few tricks up my sleeve:<br>${d.skills.map(s=>`🎵 <b>${s.name}</b>: ${s.desc}`).join('<br>')}<br>Not pro-level, but enough to entertain myself and occasionally wow someone. (๑˘︶˘๑)`
@@ -1855,8 +2081,70 @@ function isBlocked(q){
   return BLOCK.some(w=>ql.includes(w));
 }
 
+/* ============================================================
+   问候语识别：只有「纯问候」才命中，避免把「你好，你是谁」
+   这类带提问的句子也当成问候（那时应走对应问答意图）。
+   步骤：去空格/标点 → 去掉全部问候词 → 去掉语气词 → 空则命中。
+   ============================================================ */
+const GREET_PUNCT = [" ","　","\t","\n","!","！","?","？",".","。",",","，","、","~","～","…","·","-","—","_","'","’","“","”","\"","(",")","（","）","[","]","{","}",":","：",";","；","/","\\","+","*","#","@","&","|","<",">","=","^","$","%"];
+const GREET_WORDS = ["你好","您好","你们好","大家好","哈罗","哈囉","哈喽","嗨喽","泥嚎","你嚎","早上好","早安","中午好","午安","下午好","晚上好","晚安","在吗","在么","在不在","好久不见","初次见面","嗨",
+  "goodmorning","goodafternoon","goodevening","goodnight","hithere","hellothere","longtimenosee","nicetomeetyou","howareyou","howsitgoing",
+  "hello","hi","hey","yo","sup","howdy","greetings","hola","hiya","heya","morning","afternoon","evening","night","早"];
+const GREET_FILL = ["呀","啊","哇","哦","喔","咯","啦","哈","嘿","嗯","诶","欸","哟","额","吧","呢","吗","嘛","么","呐","哎","唉","噢"];
+function greetNorm(q){
+  let s = (q||"").toLowerCase();
+  GREET_PUNCT.forEach(c=>{ s = s.split(c).join(""); });
+  return s;
+}
+function isBareGreeting(q){
+  let s = greetNorm(q);
+  if(!s) return false;
+  GREET_WORDS.forEach(w=>{ s = s.split(w).join(""); });
+  GREET_FILL.forEach(c=>{ s = s.split(c).join(""); });
+  return s.length === 0;
+}
+function greetKind(q){
+  const s = greetNorm(q);
+  if(/晚安|goodnight|night/.test(s)) return "night";
+  if(/早安|早上好|morning/.test(s)) return "morning";
+  if(/中午好|午安|下午好|afternoon/.test(s)) return "day";
+  if(/晚上好|evening/.test(s)) return "evening";
+  return "hi";
+}
+const GREET_TEXTS = {
+  zh:{
+    morning:[d=>`早呀～新的一天也要元气满满哦！(๑•̀ㅂ•́)و✧`, d=>`早安～我是${d.nickname}，今天想聊点什么？`],
+    day:[d=>`午安～要不要来聊聊我的爱好？(｡•̀ᴗ-)✧`],
+    evening:[d=>`晚上好呀～忙了一天，来听首歌放松一下吧？`],
+    night:[d=>`晚安啦～早点休息，梦里也要好好的 (｡•́︿•̀｡)`, d=>`晚安，好梦～明天见！`],
+    hi:[d=>`你好呀～我是 <b>${d.name}</b>（${d.nickname}），随时陪你聊两句 (｡•̀ᴗ-)✧`, d=>`嗨～很高兴见到你！想了解我的<b>爱好</b>、<b>性格</b>还是<b>联系方式</b>？`]
+  },
+  tw:{
+    morning:[d=>`早呀～新的一天也要元氣滿滿哦！(๑•̀ㅂ•́)و✧`, d=>`早安～我是${d.nickname}，今天想聊點什麼？`],
+    day:[d=>`午安～要不要來聊聊我的愛好？(｡•̀ᴗ-)✧`],
+    evening:[d=>`晚上好呀～忙了一天，來聽首歌放鬆一下吧？`],
+    night:[d=>`晚安啦～早點休息，夢裡也要好好的 (｡•́︿•̀｡)`, d=>`晚安，好夢～明天見！`],
+    hi:[d=>`你好呀～我是 <b>${d.name}</b>（${d.nickname}），隨時陪你聊兩句 (｡•̀ᴗ-)✧`, d=>`嗨～很高興見到你！想了解我的<b>愛好</b>、<b>性格</b>還是<b>聯絡方式</b>？`]
+  },
+  en:{
+    morning:[d=>`Morning~ Have a great day! (๑•̀ㅂ•́)و✧`, d=>`Good morning! I'm ${d.nickname} — what shall we chat about today?`],
+    day:[d=>`Good afternoon~ Want to hear about my hobbies?`],
+    evening:[d=>`Good evening~ Long day? Put on a song and relax.`],
+    night:[d=>`Good night~ Rest well and sweet dreams (｡•́︿•̀｡)`, d=>`Sleep tight~ See you tomorrow!`],
+    hi:[d=>`Hi there~ I'm <b>${d.name}</b> (aka ${d.nickname}). Happy to chat anytime! (｡•̀ᴗ-)✧`, d=>`Hey~ Nice to meet you! Curious about my <b>hobbies</b>, <b>personality</b> or <b>contact info</b>?`]
+  }
+};
+function greetText(kind){
+  const pk = pickLang();
+  const pack = GREET_TEXTS[pk] || GREET_TEXTS.zh;
+  const arr = pack[kind] || pack.hi;
+  const d = botKnows();
+  return arr[Math.floor(Math.random()*arr.length)](d);
+}
+
 function botAnswer(q){
   if(isBlocked(q)) return t("bot","blocked");
+  if(isBareGreeting(q)) return greetText(greetKind(q));
   const ql = q.toLowerCase();
   const hit = BOT_INTENT.find(it=>it.keys.some(k=>ql.includes(k.toLowerCase())));
   const d = botKnows();
@@ -1872,8 +2160,8 @@ function botAnswer(q){
 const quickLabels = {
   intro:{zh:"认识一下",tw:"認識一下",en:"Who am I"},
   mbti:{zh:"你的性格",tw:"你的性格",en:"Personality"},
-  hobby:{zh:"你的兴趣",tw:"你的興趣",en:"Hobbies"},
-  skill:{zh:"会什么技能",tw:"會什麼技能",en:"Skills"},
+  hobby:{zh:"你的爱好",tw:"你的愛好",en:"Hobbies"},
+  skill:{zh:"会什么才艺",tw:"會什麼才藝",en:"Talents"},
   contact:{zh:"怎么联系你",tw:"怎麼聯絡你",en:"Contact"},
   recent:{zh:"最近在忙什么",tw:"最近在忙什麼",en:"What's new"},
   zodiac:{zh:"你的生日",tw:"你的生日",en:"Birthday"}
@@ -2029,6 +2317,22 @@ function streamReply(payload, q){
 }
 function botReply(q){
   const turns = AI.maxTurns || 8;
+  /* 纯问候语：固定由本地分身回应，保证「所有问候语」都有应答（不占用模型额度） */
+  if(!isBlocked(q) && isBareGreeting(q)){
+    AI.history.push({role:"user", content:q});
+    AI.history = AI.history.slice(-turns*2);
+    AI.local++; AI.busy = true;
+    const el = addTyping();
+    setTimeout(()=>{
+      if(el) el.remove();
+      const txt = greetText(greetKind(q));
+      addBubble(txt, "bot");
+      AI.history.push({role:"assistant", content: txt.replace(/<[^>]+>/g,"")});
+      AI.history = AI.history.slice(-turns*2);
+      AI.busy = false;
+    }, 700);
+    return;
+  }
   const payload = {
     messages: AI.history.slice(-turns*2).concat([{role:"user",content:q}]),
     profile: (typeof data!=="undefined" ? data : null),
@@ -2076,9 +2380,9 @@ function qLabel(id){
 }
 function questionFor(id){
   const maps = {
-    zh:{intro:"介绍一下你自己",mbti:"你的MBTI是什么",hobby:"你的兴趣是什么",skill:"你会什么技能",contact:"怎么联系你",recent:"最近在忙什么",zodiac:"你的生日是什么时候"},
-    tw:{intro:"介紹一下你自己",mbti:"你的MBTI是什麼",hobby:"你的興趣是什麼",skill:"你會什麼技能",contact:"怎麼聯絡你",recent:"最近在忙什麼",zodiac:"你的生日是什麼時候"},
-    en:{intro:"Introduce yourself",mbti:"What's your MBTI?",hobby:"What are your hobbies?",skill:"What skills do you have?",contact:"How can I contact you?",recent:"What have you been up to?",zodiac:"When is your birthday?"}
+    zh:{intro:"介绍一下你自己",mbti:"你的MBTI是什么",hobby:"你的爱好是什么",skill:"你会什么才艺",contact:"怎么联系你",recent:"最近在忙什么",zodiac:"你的生日是什么时候"},
+    tw:{intro:"介紹一下你自己",mbti:"你的MBTI是什麼",hobby:"你的愛好是什麼",skill:"你會什麼才藝",contact:"怎麼聯絡你",recent:"最近在忙什麼",zodiac:"你的生日是什麼時候"},
+    en:{intro:"Introduce yourself",mbti:"What's your MBTI?",hobby:"What are your hobbies?",skill:"What are you good at?",contact:"How can I contact you?",recent:"What have you been up to?",zodiac:"When is your birthday?"}
   };
   const m = maps[pickLang()];
   return m[id] || m.intro;
@@ -2190,6 +2494,23 @@ const navLinks=[...document.querySelectorAll(".nav-links a")];
 const sections=navLinks.map(a=>document.querySelector(a.getAttribute("href")));
 const navObs=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){navLinks.forEach(a=>a.classList.toggle("active",a.getAttribute("href")==="#"+e.target.id));}});},{rootMargin:"-45% 0px -50% 0px"});
 sections.forEach(s=>s&&navObs.observe(s));
+
+/* 侧边导引栏：滚动高亮当前分区；回到顶部：滚动一定距离后出现 */
+(function sideGuide(){
+  const dots=[...document.querySelectorAll("#side-nav .side-dot")];
+  if(dots.length){
+    const guideObs=new IntersectionObserver(es=>{
+      es.forEach(e=>{if(e.isIntersecting){dots.forEach(d=>d.classList.toggle("active",d.getAttribute("href")==="#"+e.target.id));}});
+    },{rootMargin:"-45% 0px -50% 0px"});
+    dots.forEach(d=>{const s=document.querySelector(d.getAttribute("href"));if(s)guideObs.observe(s);});
+  }
+  const toTop=document.getElementById("to-top");
+  if(!toTop) return;
+  const toggle=()=>toTop.classList.toggle("show",window.scrollY>420);
+  window.addEventListener("scroll",toggle,{passive:true});
+  toggle();
+  toTop.addEventListener("click",()=>window.scrollTo({top:0,behavior:"smooth"}));
+})();
 
 /* 初始化 */
 applyTheme();
@@ -4150,6 +4471,648 @@ const BGM = (function(){
     }).catch(function(){}).then(function(){ ownerLoading = false; });
   }
   if(configured && hasStoredSession()) restoreOwner();
+})();
+
+/* ============================================================
+   ⑨ 页脚小入口弹窗：关于本站 / 更新记录
+   · 文案用「访客语言」重写：只保留可感知的里程碑，去掉版本号等内部术语
+   · 复用原生 <dialog>（Esc 与焦点管理交给浏览器）
+   · 切换语言时由 applyLang() 调用 window.__docRefresh() 重渲染
+   ============================================================ */
+(function siteDocs(){
+  const dialog = document.getElementById("doc-dialog");
+  if(!dialog) return;
+  const el = {
+    kicker: document.getElementById("doc-kicker"),
+    title:  document.getElementById("doc-title"),
+    sub:    document.getElementById("doc-sub"),
+    body:   document.getElementById("doc-body"),
+    close:  document.getElementById("doc-close")
+  };
+  if(!el.title || !el.body) return;
+
+  /* ---- 三语文案（访客视角）---- */
+  const DOC = {
+    "zh-CN": {
+      about:{
+        kicker:"About", title:"关于本站", sub:"关于这个主页，也关于它是怎么做出来的",
+        body:[
+          "这是王童（Cuprum）的个人主页：关于我、爱好、项目、经历与联系方式，还有一位记得我全部资料的「数字分身」，随时都愿意陪你聊两句。",
+          "页面用原生 HTML / CSS / JavaScript 手写，没有使用任何框架；支持简体中文、繁體中文与 English，并可一键切换多套配色。",
+          "右下角的小圆环是意见反馈入口——看到的、想说的，都欢迎留给我。"
+        ],
+        tags:["原生手写","无框架","三语支持","多套配色"],
+        close:"关闭"
+      },
+      updates:{
+        kicker:"Changelog", title:"更新记录", sub:"按周划分的版本里程碑 · 精确到日期",
+        weeks:[
+          {v:"V0", range:"2026-08-31 ~ 09-06", items:[
+            {d:"2026-09-03", v:"V0.0", h:"项目起步", p:"个人主页的构想成形：关于、技能、项目、经历，再加上一个可以聊天的「数字分身」。"}
+          ]},
+          {v:"V1", range:"2026-09-07 ~ 09-13", items:[
+            {d:"2026-09-10", v:"V1.0", h:"主页雏形", p:"关于、技能、项目、经历、联系方式与数字分身聊天区全部就位，同时支持三种语言与多套配色。"},
+            {d:"2026-09-10", v:"V1.1", h:"经历变时间轴", p:"教育经历改成一条条时间轴，一眼就能看清先后。"}
+          ]},
+          {v:"V2", range:"2026-09-14 ~ 09-20", items:[
+            {d:"2026-09-17", v:"V2.0", h:"光标拖尾", p:"鼠标划过会留下粒子轨迹，颜色跟着当前配色变化。"},
+            {d:"2026-09-17", v:"V2.1", h:"开场动画", p:"新增科幻启动页：闪烁的芯片、蔓延的发光电路与星空，点一下芯片就能进入主页。"},
+            {d:"2026-09-18", v:"V2.2", h:"背景音乐与 DNA", p:"加入背景音乐，以及缓缓旋转的背景 DNA 双螺旋；芯片重新绘制得更精致。"},
+            {d:"2026-09-18", v:"V2.3", h:"启动页换装", p:"启动界面换成蓝灰金属质感，电路铺满整屏，观感更统一。"},
+            {d:"2026-09-20", v:"V2.4", h:"个人签名", p:"用玻璃质感的个人签名替代头像，大标题换成猫爪线稿，并新增点击粒子特效。"},
+            {d:"2026-09-20", v:"V2.5", h:"更轻的点击声", p:"音效换成轻快的鼠标「咔哒」声，音量统一、更耐听。"},
+            {d:"2026-09-20", v:"V2.6", h:"意见反馈上线", p:"右下角多了一个反馈入口，可以留下昵称、关系、设备与想说的话。"},
+            {d:"2026-09-20", v:"V2.7", h:"反馈箱成型", p:"反馈入口变成右下角悬浮按钮，点开是简洁的表单，配色跟随主题。"},
+            {d:"2026-09-20", v:"V2.8", h:"全站多语言", p:"页面上的每一处文字都能跟随语言切换，简中、繁中、英文任意换。"},
+            {d:"2026-09-20", v:"V2.9", h:"反馈入口改版", p:"反馈入口换成会自转的 HUD 圆环徽标，留言也更简单直接。"}
+          ]},
+          {v:"V3", range:"2026-09-21 ~ 09-27", items:[
+            {d:"2026-09-24", v:"V3.0", h:"做减法", p:"移除小红书、抖音与手机号、微信、QQ 等内容，导航更清爽；设备类型改为自动识别。"},
+            {d:"2026-09-24", v:"V3.1", h:"正式交付版", p:"与上一版内容基本一致，作为正式发布的归档版本。"}
+          ]},
+          {v:"V4", range:"2026-09-28 起", items:[
+            {d:"2026-09-28", v:"V4.0", h:"手机端优化", p:"窄屏顶部栏改为两行，按钮收紧、首屏下移，手机上看更舒服。"},
+            {d:"2026-10-02", v:"V4.1", h:"页脚与站内说明", p:"页脚改为「关于本站 · 更新记录」，点开有说明弹窗；更新记录按周版本号（自 V0 起）重新整理。"},
+            {d:"2026-10-02", v:"V4.2", h:"技能专属画廊", p:"「技能与才艺」每一项都能点进自己的专属画廊，集中展示该项的图片与文字，内容陆续补充。"},
+            {d:"2026-10-03", v:"V4.3", h:"品鉴美食画廊", p:"「品鉴美食」也开出了自己的画廊：五十多张随手拍按横、竖、方自动排版，配上一段小记。"},
+            {d:"2026-10-03", v:"V4.4", h:"数字分身更会聊", p:"数字分身听得懂各种问爱好的说法，也会认「你好」「晚安」这类问候，并按早中晚时段回应。"},
+            {d:"2026-10-03", v:"V4.5", h:"页面导引与回到顶部", p:"右侧多了会随滚动点亮的页面导引，右下角是回到顶部按钮；顶部只留名字，导航更清爽。"}
+          ]}
+        ],
+        close:"关闭"
+      }
+    },
+    "zh-TW": {
+      about:{
+        kicker:"About", title:"關於本站", sub:"關於這個主頁，也關於它是怎麼做出來的",
+        body:[
+          "這是王童（Cuprum）的個人主頁：關於我、愛好、項目、經歷與聯絡方式，還有一位記得我全部資料的「數字分身」，隨時都願意陪你聊兩句。",
+          "頁面用原生 HTML / CSS / JavaScript 手寫，沒有使用任何框架；支援簡體中文、繁體中文與 English，並可一鍵切換多套配色。",
+          "右下角的小圓環是意見回饋入口——看到的、想說的，都歡迎留給我。"
+        ],
+        tags:["原生手寫","無框架","三語支援","多套配色"],
+        close:"關閉"
+      },
+      updates:{
+        kicker:"Changelog", title:"更新記錄", sub:"按週劃分的版本里程碑 · 精確到日期",
+        weeks:[
+          {v:"V0", range:"2026-08-31 ~ 09-06", items:[
+            {d:"2026-09-03", v:"V0.0", h:"項目起步", p:"個人主頁的構想成形：關於、技能、項目、經歷，再加上一個可以聊天的「數字分身」。"}
+          ]},
+          {v:"V1", range:"2026-09-07 ~ 09-13", items:[
+            {d:"2026-09-10", v:"V1.0", h:"主頁雛形", p:"關於、技能、項目、經歷、聯絡方式與數字分身聊天區全部就位，同時支援三種語言與多套配色。"},
+            {d:"2026-09-10", v:"V1.1", h:"經歷變時間軸", p:"教育經歷改成一條條時間軸，一眼就能看清先後。"}
+          ]},
+          {v:"V2", range:"2026-09-14 ~ 09-20", items:[
+            {d:"2026-09-17", v:"V2.0", h:"游標拖尾", p:"滑鼠劃過會留下粒子軌跡，顏色跟著當前配色變化。"},
+            {d:"2026-09-17", v:"V2.1", h:"開場動畫", p:"新增科幻啟動頁：閃爍的晶片、蔓延的發光電路與星空，點一下晶片就能進入主頁。"},
+            {d:"2026-09-18", v:"V2.2", h:"背景音樂與 DNA", p:"加入背景音樂，以及緩緩旋轉的背景 DNA 雙螺旋；晶片重新繪製得更精緻。"},
+            {d:"2026-09-18", v:"V2.3", h:"啟動頁換裝", p:"啟動介面換成藍灰金屬質感，電路鋪滿整屏，觀感更統一。"},
+            {d:"2026-09-20", v:"V2.4", h:"個人簽名", p:"用玻璃質感的個人簽名取代頭像，大標題換成貓爪線稿，並新增點擊粒子特效。"},
+            {d:"2026-09-20", v:"V2.5", h:"更輕的點擊聲", p:"音效換成輕快的滑鼠「咔噠」聲，音量統一、更耐聽。"},
+            {d:"2026-09-20", v:"V2.6", h:"意見回饋上線", p:"右下角多了一個回饋入口，可以留下暱稱、關係、裝置與想說的話。"},
+            {d:"2026-09-20", v:"V2.7", h:"回饋箱成型", p:"回饋入口變成右下角懸浮按鈕，點開是簡潔的表單，配色跟著主題。"},
+            {d:"2026-09-20", v:"V2.8", h:"全站多語言", p:"頁面上的每一處文字都能跟著語言切換，簡中、繁中、英文任意換。"},
+            {d:"2026-09-20", v:"V2.9", h:"回饋入口改版", p:"回饋入口換成會自轉的 HUD 圓環徽標，留言也更簡單直接。"}
+          ]},
+          {v:"V3", range:"2026-09-21 ~ 09-27", items:[
+            {d:"2026-09-24", v:"V3.0", h:"做減法", p:"移除小紅書、抖音與手機號、微信、QQ 等內容，導覽更清爽；裝置類型改為自動識別。"},
+            {d:"2026-09-24", v:"V3.1", h:"正式交付版", p:"與上一版內容基本一致，作為正式發佈的歸檔版本。"}
+          ]},
+          {v:"V4", range:"2026-09-28 起", items:[
+            {d:"2026-09-28", v:"V4.0", h:"手機端優化", p:"窄螢幕頂部欄改為兩行，按鈕收緊、首屏下移，手機上看更舒服。"},
+            {d:"2026-10-02", v:"V4.1", h:"頁腳與站內說明", p:"頁腳改為「關於本站 · 更新記錄」，點開有說明彈窗；更新記錄按週版本號（自 V0 起）重新整理。"},
+            {d:"2026-10-02", v:"V4.2", h:"技能專屬畫廊", p:"「技能與才藝」每一項都能點進自己的專屬畫廊，集中展示該項的圖片與文字，內容陸續補充。"},
+            {d:"2026-10-03", v:"V4.3", h:"品鑒美食畫廊", p:"「品鑒美食」也開出了自己的畫廊：五十多張隨手拍按橫、豎、方自動排版，配上一段小記。"},
+            {d:"2026-10-03", v:"V4.4", h:"數字分身更會聊", p:"數字分身聽得懂各種問愛好的說法，也會認「你好」「晚安」這類問候，並按早中晚時段回應。"},
+            {d:"2026-10-03", v:"V4.5", h:"頁面導引與回到頂端", p:"右側多了會隨捲動點亮的頁面導引，右下角是回到頂端按鈕；頂部只留名字，導覽更清爽。"}
+          ]}
+        ],
+        close:"關閉"
+      }
+    },
+    "en": {
+      about:{
+        kicker:"About", title:"About this site", sub:"A little about this homepage and how it is made",
+        body:[
+          "This is Wang Tong (Cuprum)'s homepage: about me, skills, projects, timeline and contact — plus a digital avatar that remembers everything about me and is always happy to chat.",
+          "The page is hand-written in plain HTML / CSS / JavaScript with no framework. It speaks Simplified Chinese, Traditional Chinese and English, and offers several color themes.",
+          "The small ring in the bottom-right corner opens the feedback box — anything you noticed or want to say is very welcome."
+        ],
+        tags:["Hand-written","No framework","Trilingual","Multiple themes"],
+        close:"Close"
+      },
+      updates:{
+        kicker:"Changelog", title:"Changelog", sub:"Week-based milestones · precise to the day",
+        weeks:[
+          {v:"V0", range:"2026-08-31 ~ 09-06", items:[
+            {d:"2026-09-03", v:"V0.0", h:"Project kickoff", p:"The idea takes shape: about, skills, projects and timeline, plus a digital avatar you can chat with."}
+          ]},
+          {v:"V1", range:"2026-09-07 ~ 09-13", items:[
+            {d:"2026-09-10", v:"V1.0", h:"First homepage", p:"About, skills, projects, timeline, contact and the avatar chat are all in place — with three languages and several themes."},
+            {d:"2026-09-10", v:"V1.1", h:"Education timeline", p:"Education history becomes a clear, item-by-item timeline."}
+          ]},
+          {v:"V2", range:"2026-09-14 ~ 09-20", items:[
+            {d:"2026-09-17", v:"V2.0", h:"Cursor trails", p:"Particles follow your cursor, tinted by the current theme."},
+            {d:"2026-09-17", v:"V2.1", h:"Boot sequence", p:"A sci-fi intro appears: a blinking chip, glowing circuits and a starfield — tap the chip to enter."},
+            {d:"2026-09-18", v:"V2.2", h:"Music and DNA", p:"Background music arrives, along with a slowly turning DNA double helix; the chip is redrawn in finer detail."},
+            {d:"2026-09-18", v:"V2.3", h:"New intro look", p:"The intro switches to a blue-grey metal finish with circuits filling the whole screen."},
+            {d:"2026-09-20", v:"V2.4", h:"A glass signature", p:"A glassy signature replaces the avatar, a cat-paw line art replaces the headline, and click sparks are added."},
+            {d:"2026-09-20", v:"V2.5", h:"Softer clicks", p:"Sound effects become a light mouse “click”, with one unified volume."},
+            {d:"2026-09-20", v:"V2.6", h:"Feedback box", p:"A feedback entry appears in the corner — leave a nickname, relation, device and a message."},
+            {d:"2026-09-20", v:"V2.7", h:"Feedback, refined", p:"The entry becomes a floating button that opens a compact form which follows the theme."},
+            {d:"2026-09-20", v:"V2.8", h:"Fully multilingual", p:"Every piece of text on the page now follows the language you pick."},
+            {d:"2026-09-20", v:"V2.9", h:"A new feedback badge", p:"The entry becomes a self-spinning HUD ring badge, with a simpler one-field message box."}
+          ]},
+          {v:"V3", range:"2026-09-21 ~ 09-27", items:[
+            {d:"2026-09-24", v:"V3.0", h:"Decluttering", p:"Xiaohongshu, Douyin, phone, WeChat and QQ are removed and the nav gets cleaner; device type becomes automatic."},
+            {d:"2026-09-24", v:"V3.1", h:"Release build", p:"Essentially the same as the previous version, archived as the official release."}
+          ]},
+          {v:"V4", range:"from 2026-09-28", items:[
+            {d:"2026-09-28", v:"V4.0", h:"Better on mobile", p:"The top bar becomes two rows on narrow screens; buttons tighten and the hero shifts down."},
+            {d:"2026-10-02", v:"V4.1", h:"Footer and site notes", p:"The footer becomes “About this site · Changelog”, and the changelog is now grouped under weekly version numbers starting from V0."},
+            {d:"2026-10-02", v:"V4.2", h:"Skill galleries", p:"Every “Skills & Talents” item now opens its own gallery, gathering that item's images and text (content to be filled in)."},
+            {d:"2026-10-03", v:"V4.3", h:"Food gallery", p:"“Food tasting” gets its own gallery too: fifty-odd snapshots auto-arranged by shape, with a short note."},
+            {d:"2026-10-03", v:"V4.4", h:"A chattier avatar", p:"The digital avatar now understands many ways of asking about hobbies, and answers greetings such as “hello” or “good night” by time of day."},
+            {d:"2026-10-03", v:"V4.5", h:"Page guide and back-to-top", p:"A page guide on the right lights up as you scroll, with a back-to-top button below; the header keeps just the name for a cleaner nav."}
+          ]}
+        ],
+        close:"Close"
+      }
+    }
+  };
+
+  let mode = "about";
+  function pack(){ return DOC[lang] || DOC.en; }
+
+  function render(){
+    const d = pack()[mode] || DOC.en[mode];
+    if(!d) return;
+    el.kicker.textContent = d.kicker || "";
+    el.title.textContent  = d.title || "";
+    el.sub.textContent    = d.sub || "";
+    el.close.setAttribute("aria-label", d.close || "Close");
+    if(mode === "updates"){
+      el.body.innerHTML = (d.weeks || []).map(function(w){
+        return '<section class="doc-wk">'
+          + '<div class="doc-wk__head"><span class="wk-v">' + esc(w.v) + '</span><span class="wk-r">' + esc(w.range) + '</span></div>'
+          + '<ul class="doc-log">' + (w.items || []).map(function(x){
+              return '<li><div class="d">' + esc(x.d) + '<span class="v">' + esc(x.v) + '</span></div>'
+                   + '<div class="h">' + esc(x.h) + '</div>'
+                   + '<div class="p">' + esc(x.p) + '</div></li>';
+            }).join("") + '</ul></section>';
+      }).join("");
+    }else{
+      el.body.innerHTML = (d.body || []).map(function(p){ return "<p>" + esc(p) + "</p>"; }).join("")
+        + (d.tags && d.tags.length
+            ? '<div class="doc-tags">' + d.tags.map(function(s){ return "<span>" + esc(s) + "</span>"; }).join("") + "</div>"
+            : "");
+    }
+  }
+
+  function open(m){
+    mode = (m === "updates") ? "updates" : "about";
+    render();
+    if(typeof dialog.showModal === "function"){ if(!dialog.open) dialog.showModal(); }
+    else dialog.setAttribute("open","");
+    try{ el.close.focus(); }catch(e){}
+  }
+  function close(){
+    if(dialog.open && typeof dialog.close === "function") dialog.close();
+    else dialog.removeAttribute("open");
+  }
+
+  /* 事件委托：页脚链接每次切换语言都会重建，统一用 data-doc 接管 */
+  document.addEventListener("click", function(e){
+    const btn = e.target && e.target.closest ? e.target.closest("[data-doc]") : null;
+    if(!btn) return;
+    e.preventDefault();
+    try{ window.__sfx && window.__sfx.click(); }catch(_){}
+    open(btn.dataset.doc);
+  });
+  el.close.addEventListener("click", close);
+  dialog.addEventListener("click", function(e){ if(e.target === dialog) close(); });
+
+  window.__docRefresh = render;   /* applyLang() 切换语言时重渲染 */
+  render();                       /* 首次填充：打开即有内容 */
+})();
+
+/* ============================================================
+    ⑪ 爱好画廊：点击「爱好」任意一项 → 进入该爱好专属画廊
+   · 路由：#/gallery/<gid>（piano / guitar / music / drawing / cosplay / photography / food）
+     —— 用 URL hash 做跳转，浏览器前进 / 后退、直接分享链接都可用
+   · 图片与文字内容按指令填充：
+       GALLERY_CONTENT[gid][lang] = {
+         images:[{src:"images/xxx.jpg", caption:"图注"}],
+         blocks:[{h:"小标题", p:"正文段落"}]
+       }
+      已填充：cosplay（图片在 outputs/cosplay/）、photography（35 张，图片在 outputs/photography/，
+       按朝向分块：竖图 3 列 / 横图 3 列）、drawing（5 张，图片在 outputs/drawing/，按原图尺寸
+       分块：全景横图整行 + 两张竖图一行 + 两张横图一行，均等比完整显示不裁切）、music（6 张，
+       图片在 outputs/music/，横竖成对分块）、food（54 张，图片在 outputs/food/，按朝向分块：
+       横图 3 列 / 竖图 4 列 / 方图 2 列，均等比完整显示不裁切）；
+      其余项留空 → 显示空白放置区。
+   ============================================================ */
+(function siteGallery(){
+  const view = document.getElementById("gallery-view");
+  if(!view) return;
+  const el = {
+    back:document.getElementById("gallery-back"),
+    backTxt:document.getElementById("gallery-back-txt"),
+    crumb:document.getElementById("gallery-crumb"),
+    prev:document.getElementById("gallery-prev"),
+    next:document.getElementById("gallery-next"),
+    count:document.getElementById("gallery-count"),
+    ico:document.getElementById("gallery-ico"),
+    kicker:document.getElementById("gallery-kicker"),
+    title:document.getElementById("gallery-title"),
+    sub:document.getElementById("gallery-sub"),
+    grid:document.getElementById("gallery-grid"),
+    prose:document.getElementById("gallery-prose")
+  };
+
+  /* ---- 画廊内容（待你的指令填充；留空显示占位）---- */
+  /* cosplay 画廊：9 张照片（网页压缩版，等比完整显示，不裁切） */
+  const COSPLAY_IMAGES = [
+    {src:"cosplay/cos-01.jpg", alt:"cosplay photo 01"},
+    {src:"cosplay/cos-02.jpg", alt:"cosplay photo 02"},
+    {src:"cosplay/cos-03.jpg", alt:"cosplay photo 03"},
+    {src:"cosplay/cos-04.jpg", alt:"cosplay photo 04"},
+    {src:"cosplay/cos-05.jpg", alt:"cosplay photo 05"},
+    {src:"cosplay/cos-06.jpg", alt:"cosplay photo 06"},
+    {src:"cosplay/cos-07.jpg", alt:"cosplay photo 07"},
+    {src:"cosplay/cos-08.jpg", alt:"cosplay photo 08"},
+    {src:"cosplay/cos-09.jpg", alt:"cosplay photo 09"}
+  ];
+
+  /* Photography gallery: 35 photos (web-compressed copies, EXIF-rotation applied).
+     Grouped by orientation -> portraits 4 columns / landscapes 3 columns;
+     every tile keeps the original aspect ratio, so nothing is cropped. */
+  const PHOTO_IMAGES = [
+    {src:"photography/ph-01.jpg", alt:"photography photo 01", orient:"p", w:675, h:900},
+    {src:"photography/ph-02.jpg", alt:"photography photo 02", orient:"p", w:675, h:900},
+    {src:"photography/ph-03.jpg", alt:"photography photo 03", orient:"p", w:675, h:900},
+    {src:"photography/ph-04.jpg", alt:"photography photo 04", orient:"p", w:675, h:900},
+    {src:"photography/ph-05.jpg", alt:"photography photo 05", orient:"p", w:675, h:900},
+    {src:"photography/ph-06.jpg", alt:"photography photo 06", orient:"p", w:675, h:900},
+    {src:"photography/ph-07.jpg", alt:"photography photo 07", orient:"p", w:675, h:900},
+    {src:"photography/ph-08.jpg", alt:"photography photo 08", orient:"p", w:675, h:900},
+    {src:"photography/ph-09.jpg", alt:"photography photo 09", orient:"p", w:675, h:900},
+    {src:"photography/ph-10.jpg", alt:"photography photo 10", orient:"p", w:675, h:900},
+    {src:"photography/ph-11.jpg", alt:"photography photo 11", orient:"p", w:675, h:900},
+    {src:"photography/ph-12.jpg", alt:"photography photo 12", orient:"p", w:675, h:900},
+    {src:"photography/ph-13.jpg", alt:"photography photo 13", orient:"p", w:675, h:900},
+    {src:"photography/ph-14.jpg", alt:"photography photo 14", orient:"p", w:675, h:900},
+    {src:"photography/ph-15.jpg", alt:"photography photo 15", orient:"l", w:900, h:675},
+    {src:"photography/ph-16.jpg", alt:"photography photo 16", orient:"p", w:675, h:900},
+    {src:"photography/ph-17.jpg", alt:"photography photo 17", orient:"p", w:675, h:900},
+    {src:"photography/ph-18.jpg", alt:"photography photo 18", orient:"l", w:900, h:675},
+    {src:"photography/ph-19.jpg", alt:"photography photo 19", orient:"p", w:675, h:900},
+    {src:"photography/ph-20.jpg", alt:"photography photo 20", orient:"p", w:675, h:900},
+    {src:"photography/ph-21.jpg", alt:"photography photo 21", orient:"l", w:900, h:675},
+    {src:"photography/ph-22.jpg", alt:"photography photo 22", orient:"l", w:900, h:675},
+    {src:"photography/ph-23.jpg", alt:"photography photo 23", orient:"p", w:675, h:900},
+    {src:"photography/ph-24.jpg", alt:"photography photo 24", orient:"l", w:900, h:675},
+    {src:"photography/ph-25.jpg", alt:"photography photo 25", orient:"p", w:675, h:900},
+    {src:"photography/ph-26.jpg", alt:"photography photo 26", orient:"p", w:675, h:900},
+    {src:"photography/ph-27.jpg", alt:"photography photo 27", orient:"p", w:675, h:900},
+    {src:"photography/ph-28.jpg", alt:"photography photo 28", orient:"p", w:675, h:900},
+    {src:"photography/ph-29.jpg", alt:"photography photo 29", orient:"p", w:675, h:900},
+    {src:"photography/ph-30.jpg", alt:"photography photo 30", orient:"p", w:675, h:900},
+    {src:"photography/ph-31.jpg", alt:"photography photo 31", orient:"p", w:675, h:900},
+    {src:"photography/ph-32.jpg", alt:"photography photo 32", orient:"l", w:900, h:675},
+    {src:"photography/ph-33.jpg", alt:"photography photo 33", orient:"p", w:675, h:900},
+    {src:"photography/ph-34.jpg", alt:"photography photo 34", orient:"p", w:675, h:900},
+    {src:"photography/ph-35.jpg", alt:"photography photo 35", orient:"p", w:675, h:900}
+  ];
+  /* Group layout for the photography gallery (cols = grid columns per orientation group)
+     both blocks use 3 columns so every tile has the same width as the cosplay gallery and rows stay even */
+  const PHOTO_GROUPS = [{cols:3, orient:"p"}, {cols:3, orient:"l"}];
+
+  /* 手绘画廊：5 张实拍手作（网页压缩版，等比完整显示、不裁切）。
+     按原图尺寸/朝向排版：整版全景整行铺满；两张竖图一行；两张横图一行。
+     —— 每行内等宽等高，横竖各自成组，视觉整齐且细节完整。 */
+  const DRAWING_IMAGES = [
+    {src:"drawing/dr-01.jpg", alt:"A4 cutting mat with a full sheet of Q-version pencil portraits", orient:"l", w:900, h:675, caption:"整版 Q 版线稿 · A4 切割垫"},
+    {src:"drawing/dr-02.jpg", alt:"Hand holding a stamp-toothed card with a Q-version pencil sketch", orient:"p", w:675, h:900, caption:"邮票齿孔 · 铅笔线稿特写"},
+    {src:"drawing/dr-03.jpg", alt:"Two hand-painted watercolor stamp cards held up together", orient:"l", w:900, h:793, caption:"水彩上色 · 双色对照"},
+    {src:"drawing/dr-04.jpg", alt:"MATADOR and KNIGHT hand-drawn character cards in clear sleeves", orient:"l", w:900, h:675, caption:"MATADOR & KNIGHT · 角色卡"},
+    {src:"drawing/dr-05.jpg", alt:"Hand-painted watercolor snowman stamp card in a clear sleeve", orient:"p", w:675, h:900, caption:"冬日雪人 · 水彩手作卡"}
+  ];
+  const DRAWING_GROUPS = [
+    {cols:1, items:["drawing/dr-01.jpg"]},
+    {cols:2, items:["drawing/dr-02.jpg","drawing/dr-05.jpg"]},
+    {cols:2, items:["drawing/dr-03.jpg","drawing/dr-04.jpg"]}
+  ];
+
+  /* 音乐画廊：6 张喜欢的音乐人 / 歌手（网页压缩版，等比完整显示、不裁切）。
+     按原图朝向排版：两张方图一行；两张竖图一行；两张竖图一行。
+     —— 每行内等宽，横竖各自成组，视觉整齐且完整。 */
+  const MUSIC_IMAGES = [
+    {src:"music/mu-01.jpg", alt:"Alan Walker", orient:"s", w:900, h:900, caption:"Alan Walker"},
+    {src:"music/mu-03.jpg", alt:"wowaka", orient:"s", w:400, h:400, caption:"wowaka"},
+    {src:"music/mu-02.jpg", alt:"YOASOBI", orient:"p", w:721, h:900, caption:"YOASOBI"},
+    {src:"music/mu-04.jpg", alt:"汪苏泷", orient:"p", w:600, h:900, caption:"汪苏泷"},
+    {src:"music/mu-05.jpg", alt:"米津玄师", orient:"p", w:611, h:900, caption:"米津玄师"},
+    {src:"music/mu-06.jpg", alt:"邓紫棋", orient:"p", w:600, h:900, caption:"邓紫棋"}
+  ];
+  const MUSIC_GROUPS = [
+    {cols:2, items:["music/mu-01.jpg","music/mu-03.jpg"]},
+    {cols:2, items:["music/mu-02.jpg","music/mu-04.jpg"]},
+    {cols:2, items:["music/mu-05.jpg","music/mu-06.jpg"]}
+  ];
+
+  /* 品鉴美食画廊：54 张（来源 爱好/品鉴美食，网页压缩版，长边≤900，等比完整显示、不裁切）
+     按朝向分块：横图 3 列 / 竖图 4 列 / 方图 2 列；配文与关键词配色绑定 --cyan → 随主题变化 */
+  const FOOD_IMAGES = [
+    {src:"food/fd-01.jpg", alt:"品鉴美食 photo 01", orient:"l", w:900, h:675},
+    {src:"food/fd-02.jpg", alt:"品鉴美食 photo 02", orient:"l", w:900, h:675},
+    {src:"food/fd-03.jpg", alt:"品鉴美食 photo 03", orient:"l", w:900, h:675},
+    {src:"food/fd-04.jpg", alt:"品鉴美食 photo 04", orient:"p", w:675, h:900},
+    {src:"food/fd-05.jpg", alt:"品鉴美食 photo 05", orient:"p", w:675, h:900},
+    {src:"food/fd-06.jpg", alt:"品鉴美食 photo 06", orient:"p", w:675, h:900},
+    {src:"food/fd-07.jpg", alt:"品鉴美食 photo 07", orient:"p", w:675, h:900},
+    {src:"food/fd-08.jpg", alt:"品鉴美食 photo 08", orient:"p", w:675, h:900},
+    {src:"food/fd-09.jpg", alt:"品鉴美食 photo 09", orient:"p", w:675, h:900},
+    {src:"food/fd-10.jpg", alt:"品鉴美食 photo 10", orient:"p", w:675, h:900},
+    {src:"food/fd-11.jpg", alt:"品鉴美食 photo 11", orient:"p", w:675, h:900},
+    {src:"food/fd-13.jpg", alt:"品鉴美食 photo 13", orient:"p", w:675, h:900},
+    {src:"food/fd-14.jpg", alt:"品鉴美食 photo 14", orient:"p", w:675, h:900},
+    {src:"food/fd-15.jpg", alt:"品鉴美食 photo 15", orient:"p", w:675, h:900},
+    {src:"food/fd-16.jpg", alt:"品鉴美食 photo 16", orient:"l", w:900, h:675},
+    {src:"food/fd-17.jpg", alt:"品鉴美食 photo 17", orient:"l", w:900, h:675},
+    {src:"food/fd-18.jpg", alt:"品鉴美食 photo 18", orient:"l", w:900, h:675},
+    {src:"food/fd-19.jpg", alt:"品鉴美食 photo 19", orient:"l", w:900, h:675},
+    {src:"food/fd-20.jpg", alt:"品鉴美食 photo 20", orient:"l", w:900, h:675},
+    {src:"food/fd-21.jpg", alt:"品鉴美食 photo 21", orient:"p", w:675, h:900},
+    {src:"food/fd-22.jpg", alt:"品鉴美食 photo 22", orient:"p", w:674, h:900},
+    {src:"food/fd-23.jpg", alt:"品鉴美食 photo 23", orient:"p", w:674, h:900},
+    {src:"food/fd-24.jpg", alt:"品鉴美食 photo 24", orient:"p", w:675, h:900},
+    {src:"food/fd-25.jpg", alt:"品鉴美食 photo 25", orient:"l", w:900, h:675},
+    {src:"food/fd-26.jpg", alt:"品鉴美食 photo 26", orient:"p", w:675, h:900},
+    {src:"food/fd-27.jpg", alt:"品鉴美食 photo 27", orient:"p", w:675, h:900},
+    {src:"food/fd-28.jpg", alt:"品鉴美食 photo 28", orient:"p", w:675, h:900},
+    {src:"food/fd-29.jpg", alt:"品鉴美食 photo 29", orient:"p", w:675, h:900},
+    {src:"food/fd-30.jpg", alt:"品鉴美食 photo 30", orient:"p", w:675, h:900},
+    {src:"food/fd-31.jpg", alt:"品鉴美食 photo 31", orient:"p", w:675, h:900},
+    {src:"food/fd-32.jpg", alt:"品鉴美食 photo 32", orient:"p", w:675, h:900},
+    {src:"food/fd-33.jpg", alt:"品鉴美食 photo 33", orient:"p", w:675, h:900},
+    {src:"food/fd-34.jpg", alt:"品鉴美食 photo 34", orient:"p", w:675, h:900},
+    {src:"food/fd-35.jpg", alt:"品鉴美食 photo 35", orient:"p", w:675, h:900},
+    {src:"food/fd-36.jpg", alt:"品鉴美食 photo 36", orient:"p", w:675, h:900},
+    {src:"food/fd-37.jpg", alt:"品鉴美食 photo 37", orient:"p", w:675, h:900},
+    {src:"food/fd-38.jpg", alt:"品鉴美食 photo 38", orient:"p", w:675, h:900},
+    {src:"food/fd-39.jpg", alt:"品鉴美食 photo 39", orient:"p", w:675, h:900},
+    {src:"food/fd-40.jpg", alt:"品鉴美食 photo 40", orient:"s", w:900, h:900},
+    {src:"food/fd-41.jpg", alt:"品鉴美食 photo 41", orient:"p", w:506, h:900},
+    {src:"food/fd-42.jpg", alt:"品鉴美食 photo 42", orient:"p", w:675, h:900},
+    {src:"food/fd-43.jpg", alt:"品鉴美食 photo 43", orient:"p", w:675, h:900},
+    {src:"food/fd-44.jpg", alt:"品鉴美食 photo 44", orient:"p", w:675, h:900},
+    {src:"food/fd-45.jpg", alt:"品鉴美食 photo 45", orient:"s", w:900, h:900},
+    {src:"food/fd-46.jpg", alt:"品鉴美食 photo 46", orient:"p", w:506, h:900},
+    {src:"food/fd-47.jpg", alt:"品鉴美食 photo 47", orient:"l", w:900, h:506},
+    {src:"food/fd-48.jpg", alt:"品鉴美食 photo 48", orient:"p", w:675, h:900},
+    {src:"food/fd-49.jpg", alt:"品鉴美食 photo 49", orient:"p", w:675, h:900},
+    {src:"food/fd-50.jpg", alt:"品鉴美食 photo 50", orient:"l", w:900, h:675},
+    {src:"food/fd-51.jpg", alt:"品鉴美食 photo 51", orient:"p", w:675, h:900},
+    {src:"food/fd-52.jpg", alt:"品鉴美食 photo 52", orient:"p", w:675, h:900},
+    {src:"food/fd-53.jpg", alt:"品鉴美食 photo 53", orient:"p", w:675, h:900},
+    {src:"food/fd-54.jpg", alt:"品鉴美食 photo 54", orient:"p", w:675, h:900},
+    {src:"food/fd-55.jpg", alt:"品鉴美食 photo 55", orient:"l", w:900, h:675}
+  ];
+  const FOOD_GROUPS = [{cols:3, orient:"l"}, {cols:4, orient:"p"}, {cols:2, orient:"s"}];
+
+  const GALLERY_CONTENT = {
+    /* 品鉴美食画廊：54 张，按朝向分块排版（横图 3 列 / 竖图 4 列 / 方图 2 列），等比完整显示、不裁切；
+       配文与关键词配色绑定 --cyan → 随主题变化 */
+    food:{
+      "zh-CN":{
+        images:FOOD_IMAGES,
+        groups:FOOD_GROUPS,
+        blocks:[{p:"民以食为天，美食吃吃吃~"}],
+        tags:["品鉴美食","吃货","探店","街头小吃","家常菜","甜点","火锅","烧烤","咖啡","烘焙","美食摄影"]
+      },
+      "zh-TW":{
+        images:FOOD_IMAGES,
+        groups:FOOD_GROUPS,
+        blocks:[{p:"民以食為天，美食吃吃吃～"}],
+        tags:["品鑑美食","吃貨","探店","街頭小吃","家常菜","甜點","火鍋","燒烤","咖啡","烘焙","美食攝影"]
+      },
+      en:{
+        images:FOOD_IMAGES,
+        groups:FOOD_GROUPS,
+        blocks:[{p:"Food is the staff of life — eat, eat, eat~"}],
+        tags:["Food tasting","Foodie","Restaurant hunt","Street food","Home cooking","Desserts","Hotpot","BBQ","Coffee","Baking","Food photography"]
+      }
+    },
+    cosplay:{
+      "zh-CN":{
+        images:COSPLAY_IMAGES,
+        blocks:[{p:"喜欢第五人格角色斗牛士（是棕发的那位哦~旁边的是我搭子）于是cos并拍了很多照片。帅萌都可驾驭~"}]
+      },
+      "zh-TW":{
+        images:COSPLAY_IMAGES,
+        blocks:[{p:"喜歡第五人格角色鬥牛士（是棕髮的那位哦～旁邊的是我搭子）於是cos並拍了很多照片。帥萌都可駕馭～"}]
+      },
+      en:{
+        images:COSPLAY_IMAGES,
+        blocks:[{p:"I love the Matador from Identity V (the brown-haired one~ and the person next to him is my buddy), so I cosplayed and took a lot of photos. I can pull off both cool and cute~"}]
+      }
+    },
+    /* 摄影画廊：35 张，按朝向分块排版（竖图 3 列 / 横图 3 列），图片等比完整显示、不裁切；
+       配文颜色由 .gallery-prose 绑定 --cyan → 随主题变化 */
+    photography:{
+      "zh-CN":{
+        images:PHOTO_IMAGES,
+        groups:PHOTO_GROUPS,
+        blocks:[{p:"艺术源于生活，随手拍拍~"}]
+      },
+      "zh-TW":{
+        images:PHOTO_IMAGES,
+        groups:PHOTO_GROUPS,
+        blocks:[{p:"藝術源於生活，隨手拍拍～"}]
+      },
+      en:{
+        images:PHOTO_IMAGES,
+        groups:PHOTO_GROUPS,
+        blocks:[{p:"Art comes from life — just snap away~"}]
+      }
+    },
+    /* 手绘画廊：5 张实拍手作，按尺寸分块排版；配文与关键词配色绑定 --cyan → 随主题变化 */
+    drawing:{
+      "zh-CN":{
+        images:DRAWING_IMAGES,
+        groups:DRAWING_GROUPS,
+        blocks:[{p:"在板绘流行的时代，老一辈人坚持手搓（）"}],
+        tags:["手绘","铅笔线稿","Q版","水彩","邮票卡","第五人格","MATADOR","KNIGHT","雪人","手作"]
+      },
+      "zh-TW":{
+        images:DRAWING_IMAGES,
+        groups:DRAWING_GROUPS,
+        blocks:[{p:"在板繪流行的時代，老一輩人堅持手搓（）"}],
+        tags:["手繪","鉛筆線稿","Q版","水彩","郵票卡","第五人格","MATADOR","KNIGHT","雪人","手作"]
+      },
+      en:{
+        images:DRAWING_IMAGES,
+        groups:DRAWING_GROUPS,
+        blocks:[{p:"In an age when digital painting is everywhere, the older generation still insists on crafting by hand ()"}],
+        tags:["Hand-drawn","Pencil sketch","Chibi","Watercolor","Stamp card","Identity V","MATADOR","KNIGHT","Snowman","Handmade"]
+      }
+    },
+    /* 音乐画廊：6 张歌手 / 音乐人素材，按朝向分块排版；配文与关键词配色绑定 --cyan → 随主题变化 */
+    music:{
+      "zh-CN":{
+        images:MUSIC_IMAGES,
+        groups:MUSIC_GROUPS,
+        blocks:[{p:"歌品复杂，华语乐坛、J-pop、电音等均有涉猎~"}],
+        tags:["电音","EDM","J-pop","Vocaloid","华语流行","创作歌手","Alan Walker","YOASOBI","wowaka","汪苏泷","米津玄师","邓紫棋"]
+      },
+      "zh-TW":{
+        images:MUSIC_IMAGES,
+        groups:MUSIC_GROUPS,
+        blocks:[{p:"歌品複雜，華語樂壇、J-pop、電音等均有涉獵～"}],
+        tags:["電音","EDM","J-pop","Vocaloid","華語流行","創作歌手","Alan Walker","YOASOBI","wowaka","汪蘇瀧","米津玄師","鄧紫棋"]
+      },
+      en:{
+        images:MUSIC_IMAGES,
+        groups:MUSIC_GROUPS,
+        blocks:[{p:"Eclectic taste — I dabble in Mandopop, J-pop, EDM and more~"}],
+        tags:["EDM","J-pop","Vocaloid","Mandopop","Singer-songwriter","Alan Walker","YOASOBI","wowaka","Wang Sulong","Kenshi Yonezu","G.E.M."]
+      }
+    }
+  };
+
+  let current = "";
+
+  function skillById(gid){
+    const list = (typeof data !== "undefined" && data && data.skills) || [];
+    for(let i=0;i<list.length;i++){ if(list[i].gid === gid) return {item:list[i], index:i, list:list}; }
+    return null;
+  }
+  function contentFor(gid){
+    const pack = GALLERY_CONTENT[gid];
+    if(!pack) return {images:[], blocks:[]};
+    return pack[lang] || pack.en || pack["zh-CN"] || {images:[], blocks:[]};
+  }
+
+  function render(){
+    const g = t("gallery") || {};
+    const found = skillById(current);
+    el.backTxt.textContent = g.back || "Back";
+    el.crumb.textContent = g.crumb || "";
+    el.prev.setAttribute("aria-label", g.prev || "Previous");
+    el.next.setAttribute("aria-label", g.next || "Next");
+
+    if(!found){
+      el.ico.textContent = "✦";
+      el.kicker.textContent = "Gallery";
+      el.title.textContent = g.notFound || "Gallery not found";
+      el.sub.textContent = "";
+      el.count.textContent = "";
+      el.prev.disabled = true;
+      el.next.disabled = true;
+      el.grid.classList.remove("gallery-split");
+      el.grid.innerHTML = '<div class="gallery-empty">' + esc(g.notFound || "Gallery not found") + "</div>";
+      el.prose.innerHTML = "";
+      return;
+    }
+
+    const item = found.item, c = contentFor(current);
+    el.ico.textContent = item.ico || "✦";
+    el.kicker.textContent = "Gallery";
+    el.title.textContent = item.name || "";
+    el.sub.textContent = item.desc || "";
+    el.count.textContent = String(g.count || "{i} / {n}")
+      .replace("{i}", found.index + 1).replace("{n}", found.list.length);
+    el.prev.disabled = found.list.length < 2;
+    el.next.disabled = found.list.length < 2;
+
+    /* 图片区：有图渲染图，无图只留出空白放置区（不写字样）
+       · 默认：CSS 多列瀑布流（等比完整显示，不裁切）
+       · 带 groups 时：按朝向分块（竖图 3 列 / 横图 3 列），块内等宽、高度遵循原图比例 */
+    const imgs = c.images || [];
+    function tile(im){
+      return '<figure class="gallery-tile"><img src="' + esc(im.src) + '" alt="'
+        + esc(im.alt || im.caption || item.name) + '" loading="lazy" decoding="async"'
+        + (im.w && im.h ? ' width="' + im.w + '" height="' + im.h + '"' : "")
+        + ">" + (im.caption ? "<figcaption>" + esc(im.caption) + "</figcaption>" : "") + "</figure>";
+    }
+    if(!imgs.length){
+      el.grid.classList.remove("gallery-split");
+      el.grid.innerHTML = '<div class="gallery-empty" aria-hidden="true"></div>';
+    }else if(c.groups && c.groups.length){
+      el.grid.classList.add("gallery-split");
+      el.grid.innerHTML = c.groups.map(function(gr){
+        const list = imgs.filter(function(im){
+          if(gr.items) return gr.items.indexOf(im.src) >= 0;   /* 精确分组（手绘：按原图尺寸配对） */
+          return (im.orient || "") === gr.orient;             /* 按朝向分组（摄影画廊） */
+        });
+        if(!list.length) return "";
+        return '<div class="gallery-block cols-' + gr.cols + '">' + list.map(tile).join("") + "</div>";
+      }).join("");
+    }else{
+      el.grid.classList.remove("gallery-split");
+      el.grid.innerHTML = imgs.map(tile).join("");
+    }
+
+    /* 文字区：配文 + 关键词（颜色绑定 --cyan，随主题变化）；无内容只留空白放置区 */
+    const blocksHtml = (c.blocks && c.blocks.length)
+      ? c.blocks.map(function(b){
+          return (b.h ? "<h3>" + esc(b.h) + "</h3>" : "") + (b.p ? "<p>" + esc(b.p) + "</p>" : "");
+        }).join("")
+      : '<div class="gallery-empty" aria-hidden="true"></div>';
+    const tagsHtml = (c.tags && c.tags.length)
+      ? '<div class="gallery-tags">' + c.tags.map(function(s){ return "<span>" + esc(s) + "</span>"; }).join("") + "</div>"
+      : "";
+    el.prose.innerHTML = blocksHtml + tagsHtml;
+  }
+
+  function open(gid){
+    current = gid || "";
+    render();
+    view.hidden = false;
+    document.body.classList.add("gallery-open");
+    view.scrollTop = 0;
+  }
+  function close(){
+    view.hidden = true;
+    document.body.classList.remove("gallery-open");
+    current = "";
+  }
+
+  /* ---- 路由：#/gallery/<gid> ---- */
+  function route(){
+    const m = /^#\/gallery\/([A-Za-z0-9_-]+)/.exec(location.hash || "");
+    if(m) open(m[1]); else close();
+  }
+  window.addEventListener("hashchange", route);
+
+  /* ---- 交互：返回 / 上一项 / 下一项 / 键盘 ---- */
+  function go(step){
+    const list = (typeof data !== "undefined" && data && data.skills) || [];
+    if(!list.length) return;
+    let i = list.findIndex(function(s){ return s.gid === current; });
+    if(i < 0) i = 0;
+    i = (i + step + list.length) % list.length;
+    location.hash = "#/gallery/" + list[i].gid;   /* 走路由，历史一致 */
+  }
+  el.prev.addEventListener("click", function(){ go(-1); });
+  el.next.addEventListener("click", function(){ go(1); });
+  el.back.addEventListener("click", function(){
+    try{ window.__sfx && window.__sfx.click(); }catch(_){}
+    if(location.hash === "#skills") close();
+    else location.hash = "#skills";             /* 触发 hashchange：关闭并回到「爱好」 */
+  });
+  document.addEventListener("keydown", function(e){
+    if(view.hidden) return;
+    if(e.key === "Escape"){ location.hash = "#skills"; }
+    else if(e.key === "ArrowLeft"){ go(-1); }
+    else if(e.key === "ArrowRight"){ go(1); }
+  });
+
+  window.__galleryRefresh = function(){ if(!view.hidden) render(); };  /* applyLang() 切换语言时刷新 */
+
+  route();   /* 支持直接用 #/gallery/xxx 打开 */
 })();
 </script>
 </body>
