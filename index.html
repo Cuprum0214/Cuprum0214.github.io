@@ -2226,7 +2226,10 @@ function addTyping(){
 const WORKER_BASE = (function(){
   var m = location.search.match(/[?&]api=([^&]*)/);
   if(m) return decodeURIComponent(m[1]).replace(/\/+$/, "");
-  return (location.protocol === "http:" || location.protocol === "https:") ? "" : "http://127.0.0.1:8145";
+  var h = location.hostname;
+  if(location.protocol === "file:") return "http://127.0.0.1:8145";
+  if(h === "cuprum0214.github.io") return "https://cuprum-chat-oozvxwnfqh.cn-shenzhen.fcapp.run";
+  return "";
 })();
    const AI = {
   ready:null,      // 后端可用性缓存（Promise<boolean>）
