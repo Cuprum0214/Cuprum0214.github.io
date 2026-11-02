@@ -1,0 +1,22 @@
+# ---- 密钥与私有配置：绝对不要提交 ----
+server/.env
+.env
+.env.*
+!.env.example
+
+# ---- 本地运行产物 ----
+server/__pycache__/
+__pycache__/
+*.pyc
+server/data/
+.deepworks/
+outputs/
+uploads/
+node_modules/
+
+# ---- 系统与编辑器 ----
+Thumbs.db
+desktop.ini
+.DS_Store
+.vscode/
+.idea/

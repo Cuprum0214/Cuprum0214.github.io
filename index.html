@@ -2221,7 +2221,13 @@ function addTyping(){
    语言模型接入：后端（server/app.py）在线时走模型流式输出，
    离线 / 未配置密钥 / 出错时自动回退到本地模板答案。
    ============================================================ */
-const WORKER_BASE = "https://cuprum-chat.18822136876.workers.dev";
+/* 后端地址：http/https 打开时用同源（留空），file:// 打开时回退本机 8145；
+   也可用 ?api=https://你的域名 临时覆盖。 */
+const WORKER_BASE = (function(){
+  var m = location.search.match(/[?&]api=([^&]*)/);
+  if(m) return decodeURIComponent(m[1]).replace(/\/+$/, "");
+  return (location.protocol === "http:" || location.protocol === "https:") ? "" : "http://127.0.0.1:8145";
+})();
    const AI = {
   ready:null,      // 后端可用性缓存（Promise<boolean>）
   history:[],      // 多轮上下文 [{role,content}]
@@ -2236,7 +2242,7 @@ function aiReady(){
   if(AI.ready===null){
     const ac = (typeof AbortController!=="undefined") ? new AbortController() : null;
     const to = setTimeout(()=>{ try{ ac && ac.abort(); }catch(e){} }, HEALTH_MS);
-    AI.ready = fetch(WORKER_BASE + "/", { cache: "no-store", signal: ac ? ac.signal : undefined })
+    AI.ready = fetch(WORKER_BASE + "/api/health", { cache: "no-store", signal: ac ? ac.signal : undefined })
       .then(r=>r.ok?r.json():null)
       .then(j=>{
         if(j && j.ok && j.hasKey){
@@ -2318,7 +2324,7 @@ function streamReply(payload, q){
     if(obj.error){ failed=true; note=obj.error.code||obj.error.message||""; return; }
     if(typeof obj.delta==="string" && obj.delta){ firstPaint(); acc+=obj.delta; AI.streamed++; paint(); }
   };
-  fetch(WORKER_BASE + "/", {
+  fetch(WORKER_BASE + "/api/chat", {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify(payload),
@@ -4571,7 +4577,10 @@ const BGM = (function(){
             {d:"2026-10-03", v:"V4.3", h:"品鉴美食画廊", p:"「品鉴美食」也开出了自己的画廊：五十多张随手拍按横、竖、方自动排版，配上一段小记。"},
             {d:"2026-10-03", v:"V4.4", h:"数字分身更会聊", p:"数字分身听得懂各种问爱好的说法，也会认「你好」「晚安」这类问候，并按早中晚时段回应。"},
             {d:"2026-10-03", v:"V4.5", h:"页面导引与回到顶部", p:"右侧多了会随滚动点亮的页面导引，右下角是回到顶部按钮，手机上同样可用；顶部只留名字，导航更清爽。"}
-          ]}
+          ]},
+          {v:"V9", range:"2026-11-02", items:[
+            {d:"2026-11-02", v:"V9.0", h:"数字分身接入大模型", p:"数字分身换成真模型（DeepSeek），回答不再靠预设话术；语气设定为幽默风趣、时而严肃、单纯又有点古灵精怪，也会坦然承认自己有对象。"}
+          ]
         ],
         close:"关闭"
       }
@@ -4620,7 +4629,10 @@ const BGM = (function(){
             {d:"2026-10-03", v:"V4.3", h:"品鑒美食畫廊", p:"「品鑒美食」也開出了自己的畫廊：五十多張隨手拍按橫、豎、方自動排版，配上一段小記。"},
             {d:"2026-10-03", v:"V4.4", h:"數字分身更會聊", p:"數字分身聽得懂各種問愛好的說法，也會認「你好」「晚安」這類問候，並按早中晚時段回應。"},
             {d:"2026-10-03", v:"V4.5", h:"頁面導引與回到頂端", p:"右側多了會隨捲動點亮的頁面導引，右下角是回到頂端按鈕，手機上同樣可用；頂部只留名字，導覽更清爽。"}
-          ]}
+          ]},
+          {v:"V9", range:"2026-11-02", items:[
+            {d:"2026-11-02", v:"V9.0", h:"數字分身接入大模型", p:"數字分身換成真模型（DeepSeek），回答不再靠預設話術；語氣設定為幽默風趣、時而嚴肅、單純又有點古靈精怪，也會坦然承認自己有對象。"}
+          ]
         ],
         close:"關閉"
       }
@@ -4669,7 +4681,10 @@ const BGM = (function(){
             {d:"2026-10-03", v:"V4.3", h:"Food gallery", p:"“Food tasting” gets its own gallery too: fifty-odd snapshots auto-arranged by shape, with a short note."},
             {d:"2026-10-03", v:"V4.4", h:"A chattier avatar", p:"The digital avatar now understands many ways of asking about hobbies, and answers greetings such as “hello” or “good night” by time of day."},
             {d:"2026-10-03", v:"V4.5", h:"Page guide and back-to-top", p:"A page guide on the right lights up as you scroll, with a back-to-top button below — both work on phones too; the header keeps just the name for a cleaner nav."}
-          ]}
+          ]},
+          {v:"V9", range:"2026-11-02", items:[
+            {d:"2026-11-02", v:"V9.0", h:"Digital twin goes live", p:"The digital twin now runs on a real model (DeepSeek) instead of canned replies, with a playful-but-serious voice and a cheerful nod to being taken."}
+          ]
         ],
         close:"Close"
       }
