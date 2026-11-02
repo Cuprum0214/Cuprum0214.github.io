@@ -35,6 +35,8 @@
     GET  /api/feedback/stream   ?token=<所有者口令>  动态推送（SSE，25 秒一轮，自动重连）
 """
 
+import base64
+import hashlib
 import hmac
 import json
 import os
@@ -46,6 +48,7 @@ import urllib.error
 import urllib.request
 import uuid
 from collections import defaultdict, deque
+from email.utils import formatdate
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import unquote_plus
 
@@ -77,6 +80,12 @@ DEFAULTS = {
     "REPLY_PER_MIN": "120",       # 同一 IP 每分钟最多回复几条（所有者自己用）
     "FB_MAX_ITEMS": "500",        # 存储上限，超出后丢弃最旧的
     "FB_FILE": "",                # 留言数据文件，默认 server/data/feedback.json
+    # 远端存储（可选；云函数上 /code 只读，必须配这一组才能保住留言）
+    "FB_OSS_BUCKET": "",          # OSS Bucket 名
+    "FB_OSS_ENDPOINT": "",        # 例 oss-cn-hangzhou.aliyuncs.com
+    "FB_OSS_AK_ID": "",           # RAM 用户 AccessKeyId（只授权该 Bucket）
+    "FB_OSS_AK_SECRET": "",       # RAM 用户 AccessKeySecret
+    "FB_OSS_KEY": "cuprum/feedback.json",   # 对象名，可带目录
     "ALLOW_ORIGIN": "*",          # 允许跨域来源：同源部署保持 * 即可；也可填 Pages 域名
 }
 
@@ -359,6 +368,54 @@ FB_ANON = "匿名"          # 昵称留空时的占位（PDF：昵称可选填�
 _fb_lock = threading.RLock()
 _fb_changed = threading.Condition(_fb_lock)
 _fb_mem = None          # {"seq": int, "items": [...]} 惰性载入
+_fb_mem_at = 0.0        # 上次载入时间（走 OSS 时用于短 TTL 刷新）
+FB_OSS_TTL = 5.0        # 秒：多实例部署时，别人写入后最多 5 秒可见
+
+
+def _oss_ready():
+    """是否配置了 OSS 远端存储（云函数上 /code 只读，必须走远端）。"""
+    return bool(
+        (CFG.get("FB_OSS_BUCKET") or "").strip()
+        and (CFG.get("FB_OSS_ENDPOINT") or "").strip()
+        and (CFG.get("FB_OSS_AK_ID") or "").strip()
+        and (CFG.get("FB_OSS_AK_SECRET") or "").strip()
+    )
+
+
+def _oss_target():
+    bucket = CFG["FB_OSS_BUCKET"].strip()
+    endpoint = CFG["FB_OSS_ENDPOINT"].strip()
+    for prefix in ("https://", "http://"):
+        if endpoint.startswith(prefix):
+            endpoint = endpoint[len(prefix):]
+    endpoint = endpoint.rstrip("/")
+    key = (CFG.get("FB_OSS_KEY") or "cuprum/feedback.json").strip().lstrip("/")
+    return "https://%s.%s/%s" % (bucket, endpoint, key), bucket, key
+
+
+def _oss_call(method, body=None):
+    """用 OSS V1 签名直接调 REST，避免引入 oss2 / crcmod 这类二进制依赖。"""
+    url, bucket, key = _oss_target()
+    ctype = "application/json; charset=utf-8" if body is not None else ""
+    date = formatdate(usegmt=True)
+    string_to_sign = "%s\n\n%s\n%s\n/%s/%s" % (method, ctype, date, bucket, key)
+    digest = hmac.new(
+        CFG["FB_OSS_AK_SECRET"].encode("utf-8"),
+        string_to_sign.encode("utf-8"),
+        hashlib.sha1,
+    ).digest()
+    headers = {
+        "Date": date,
+        "Authorization": "OSS %s:%s" % (
+            CFG["FB_OSS_AK_ID"].strip(),
+            base64.b64encode(digest).decode("ascii"),
+        ),
+    }
+    if ctype:
+        headers["Content-Type"] = ctype
+    req = urllib.request.Request(url, data=body, headers=headers, method=method)
+    with urllib.request.urlopen(req, timeout=20) as resp:
+        return resp.read()
 
 
 def fb_clean(value, limit):
@@ -372,27 +429,51 @@ def fb_clean(value, limit):
 
 
 def fb_load():
-    """惰性载入磁盘数据（带缓存）；文件损坏时退回空表，不影响其它接口。"""
-    global _fb_mem
+    """惰性载入数据（带缓存）；配置 OSS 时按短 TTL 刷新，便于多实例同步。"""
+    global _fb_mem, _fb_mem_at
     with _fb_lock:
         if _fb_mem is not None:
-            return _fb_mem
+            if not _oss_ready() or (time.time() - _fb_mem_at) < FB_OSS_TTL:
+                return _fb_mem
         data = {"seq": 0, "items": []}
-        try:
-            if os.path.exists(FEEDBACK_FILE):
-                with open(FEEDBACK_FILE, "r", encoding="utf-8-sig") as fh:
-                    raw = json.load(fh)
+        if _oss_ready():
+            try:
+                raw = json.loads(_oss_call("GET").decode("utf-8"))
                 if isinstance(raw, dict) and isinstance(raw.get("items"), list):
                     data = {"seq": int(raw.get("seq") or 0), "items": raw["items"]}
-        except Exception as exc:
-            sys.stderr.write("[feedback] 读取失败，改用空表: %s\n" % exc)
+            except urllib.error.HTTPError as exc:
+                if exc.code != 404:      # 404 = 还没有任何留言，属正常情况
+                    sys.stderr.write("[feedback] OSS 读取失败(%s): %s\n" % (exc.code, exc))
+            except Exception as exc:
+                sys.stderr.write("[feedback] OSS 读取失败，沿用缓存: %s\n" % exc)
+                if _fb_mem is not None:
+                    return _fb_mem
+        else:
+            try:
+                if os.path.exists(FEEDBACK_FILE):
+                    with open(FEEDBACK_FILE, "r", encoding="utf-8-sig") as fh:
+                        raw = json.load(fh)
+                    if isinstance(raw, dict) and isinstance(raw.get("items"), list):
+                        data = {"seq": int(raw.get("seq") or 0), "items": raw["items"]}
+            except Exception as exc:
+                sys.stderr.write("[feedback] 读取失败，改用空表: %s\n" % exc)
         _fb_mem = data
+        _fb_mem_at = time.time()
         return _fb_mem
 
 
 def fb_save_locked():
-    """调用方必须已经持有 _fb_lock。原子写：先写临时文件再替换。"""
+    """调用方必须已经持有 _fb_lock。已配 OSS 则写远端，否则原子写本地文件。"""
+    global _fb_mem_at
     data = _fb_mem or {"seq": 0, "items": []}
+    if _oss_ready():
+        try:
+            body = json.dumps(data, ensure_ascii=False, indent=1).encode("utf-8")
+            _oss_call("PUT", body)
+            _fb_mem_at = time.time()
+        except Exception as exc:
+            sys.stderr.write("[feedback] OSS 写入失败: %s\n" % exc)
+        return
     directory = os.path.dirname(FEEDBACK_FILE)
     try:
         if not os.path.isdir(directory):
@@ -401,6 +482,7 @@ def fb_save_locked():
         with open(tmp, "w", encoding="utf-8") as fh:
             json.dump(data, fh, ensure_ascii=False, indent=1)
         os.replace(tmp, FEEDBACK_FILE)
+        _fb_mem_at = time.time()
     except Exception as exc:
         sys.stderr.write("[feedback] 写入失败: %s\n" % exc)
 
@@ -973,10 +1055,10 @@ def main():
             port = int(sys.argv[1])
         except ValueError:
             pass
-    if not os.path.isdir(ROOT_DIR):
-        print("找不到静态目录: %s" % ROOT_DIR)
-        sys.exit(1)
-    handler = lambda *a, **kw: Handler(*a, directory=ROOT_DIR, **kw)  # noqa: E731
+    static_dir = ROOT_DIR if os.path.isdir(ROOT_DIR) else BASE_DIR
+    if static_dir != ROOT_DIR:
+        print("未找到静态目录 %s，本次只提供 API 接口（云端部署属正常）" % ROOT_DIR)
+    handler = lambda *a, **kw: Handler(*a, directory=static_dir, **kw)  # noqa: E731
     httpd = ThreadingHTTPServer((host, port), handler)
     httpd.daemon_threads = True
     key_state = "已配置" if CFG.get("API_KEY") else "未配置（仅本地模板回退）"
