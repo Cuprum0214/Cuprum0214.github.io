@@ -1649,7 +1649,7 @@ const I18N = {
       contact:{kicker:"Contact",title:"联系我",desc:"欢迎交流、合作或闲聊"},
       chat:{kicker:"AI Avatar",title:"数字分身 · Cuprum",desc:"这是我的小分身，记得我的一切，风格幽默又理性，像个有点萌的小孩~"}},
     contact:{title:"来和 Cuprum 说说话",desc:"以上信息已公开，欢迎随时联系。"},
-    chat:{online:"在线 · 已记住你的全部信息",status:"在线",placeholder:"和我说点什么...",clear:"清空对话",quick:"想聊什么？",rate:"说得有点快啦，让我歇一分钟再聊～"},
+    chat:{online:"在线 · 已记住你的全部信息",status:"在线",placeholder:"和我说点什么...",clear:"清空对话",quick:"想聊什么？",rate:"说得有点快啦，让我歇一分钟再聊～",dailyLimit:"今天的对话次数已经用完啦，明天再来找我～",quotaLeft:"今日还剩 {n} 次"},
     bot:{welcome:"嗨，我是 Cuprum 的数字分身，记得自己所有的资料。想聊什么，直接问～",
       fallback:"唔，这个我还没学到呢～问我<b>爱好、性格、联系方式</b>这些我会的！(๑•̀ㅂ•́)و✧",
       blocked:"这个问题有点超出我该聊的范围啦，我们换个轻松的，聊聊<b>音乐绘画、我的日常或我本人</b>吧～(´･ω･`)"},
@@ -1724,7 +1724,7 @@ const I18N = {
       contact:{kicker:"Contact",title:"聯絡我",desc:"歡迎交流、合作或閒聊"},
       chat:{kicker:"AI Avatar",title:"數字分身 · Cuprum",desc:"這是我的小分身，記得我的一切，風格幽默又理性，像個有點萌的小孩~"}},
     contact:{title:"來和 Cuprum 說說話",desc:"以上資訊已公開，歡迎隨時聯絡。"},
-    chat:{online:"在線 · 已記住你的全部資訊",status:"在線",placeholder:"和我說點什麼...",clear:"清空對話",quick:"想聊什麼？",rate:"說得有點快啦，讓我歇一分鐘再聊～"},
+    chat:{online:"在線 · 已記住你的全部資訊",status:"在線",placeholder:"和我說點什麼...",clear:"清空對話",quick:"想聊什麼？",rate:"說得有點快啦，讓我歇一分鐘再聊～",dailyLimit:"今天的對話次數已經用完啦，明天再來找我～",quotaLeft:"今日還剩 {n} 次"},
     bot:{welcome:"嗨，我是 Cuprum 的數字分身，記得自己所有的資料。想聊什麼，直接問～",
       fallback:"唔，這個我還沒學到呢～問我<b>愛好、性格、聯絡方式</b>這些我會的！(๑•̀ㅂ•́)و✧",
       blocked:"這個問題有點超出我該聊的範圍啦，我們換個輕鬆的，聊聊<b>音樂繪畫、我的日常或我本人</b>吧～(´･ω･`)"},
@@ -1801,7 +1801,7 @@ I18N.en = {
     contact:{kicker:"Contact",title:"Contact",desc:"Let's talk, collaborate or chat"},
     chat:{kicker:"AI Avatar",title:"AI Avatar · Cuprum",desc:"This is my little avatar. It knows everything about me, witty yet rational, like a cute kid~"}},
   contact:{title:"Say hi to Cuprum",desc:"All info above is public. Feel free to reach out."},
-  chat:{online:"Online · knows everything about me",status:"Online",placeholder:"Type something...",clear:"Clear chat",quick:"What would you like to know?",rate:"Whoa, slow down a little — give me a minute to catch up!"},
+  chat:{online:"Online · knows everything about me",status:"Online",placeholder:"Type something...",clear:"Clear chat",quick:"What would you like to know?",rate:"Whoa, slow down a little — give me a minute to catch up!",dailyLimit:"You've used all your chats for today — come back tomorrow!",quotaLeft:"{n} chats left today"},
   bot:{welcome:"Hi, I'm Cuprum's digital avatar and I remember everything about me. Ask me anything!",
     fallback:"Hmm, I haven't learned that yet. Ask me about <b>hobbies, personality, or contact info</b> — things I actually know!",
     blocked:"Let's keep it light — that's a bit outside what I should chat about. How about <b>my music, art, daily life, or me</b>? (´･ω･`)"},
@@ -2231,13 +2231,26 @@ const WORKER_BASE = (function(){
   if(h === "cuprum0214.github.io") return "https://cuprum-chat-oozvxwnfqh.cn-shenzhen.fcapp.run";
   return "";
 })();
+   /* 设备标识：存 localStorage，用于「每台设备每天 N 次」的额度计数。
+   注意：清浏览器数据/换无痕模式会生成新标识，服务端无法完全阻止。 */
+function deviceId(){
+  try{
+    var k="cuprum_device_id", v=localStorage.getItem(k);
+    if(!v || v.length<8){
+      v="d"+Math.random().toString(36).slice(2,10)+Date.now().toString(36);
+      localStorage.setItem(k,v);
+    }
+    return v;
+  }catch(e){ return ""; }
+}
    const AI = {
   ready:null,      // 后端可用性缓存（Promise<boolean>）
   history:[],      // 多轮上下文 [{role,content}]
   hits:[],         // 本地限流时间戳
   maxTurns:8,      // 最多携带的对话轮数（由 /api/health 覆盖）
   limit:12,        // 每分钟最多发言数（由 /api/health 覆盖）
-  busy:false, lastErr:"", streamed:0, local:0, ctrl:null
+  busy:false, lastErr:"", streamed:0, local:0, ctrl:null,
+  dailyLimit:0, dailyLeft:-1   // 每设备每日额度（由 /api/health 覆盖）
 };
 window.__ai = AI;
 const HEALTH_MS = 4000;   // 健康探测上限：超时即判离线并回退本地模板，避免后端不可达时"卡住不回话"
@@ -2245,12 +2258,17 @@ function aiReady(){
   if(AI.ready===null){
     const ac = (typeof AbortController!=="undefined") ? new AbortController() : null;
     const to = setTimeout(()=>{ try{ ac && ac.abort(); }catch(e){} }, HEALTH_MS);
-    AI.ready = fetch(WORKER_BASE + "/api/health", { cache: "no-store", signal: ac ? ac.signal : undefined })
+    AI.ready = fetch(WORKER_BASE + "/api/health?deviceId=" + encodeURIComponent(deviceId()), { cache: "no-store", signal: ac ? ac.signal : undefined })
       .then(r=>r.ok?r.json():null)
       .then(j=>{
         if(j && j.ok && j.hasKey){
           if(typeof j.maxTurns==="number" && j.maxTurns>0) AI.maxTurns=j.maxTurns;
           if(typeof j.ratePerMin==="number" && j.ratePerMin>0) AI.limit=Math.min(12,j.ratePerMin);
+          if(j.quota && typeof j.quota.limit==="number"){
+            AI.dailyLimit=j.quota.limit;
+            AI.dailyLeft=(typeof j.quota.left==="number")?j.quota.left:0;
+            renderQuota(j.quota);
+          }
           return true;
         }
         AI.lastErr = j ? "no_key" : "bad_health";
@@ -2260,6 +2278,23 @@ function aiReady(){
       .then(v=>{ clearTimeout(to); return v; });
   }
   return AI.ready;
+}
+/* 剩余次数小字：挂在输入框下方，额度为 0（不限）时不显示 */
+function renderQuota(q){
+  var host=document.getElementById("chat-input");
+  if(!host || !host.parentNode) return;
+  var box=host.parentNode, el=document.getElementById("chat-quota");
+  if(!el){
+    el=document.createElement("div");
+    el.id="chat-quota";
+    el.style.cssText="font-size:.72rem;line-height:1.5;color:var(--muted);text-align:right;padding:2px 4px 0 0";
+    if(box.parentNode) box.parentNode.insertBefore(el, box.nextSibling);
+  }
+  if(!q || !q.limit || q.limit<0){ el.textContent=""; return; }
+  var left=(typeof q.left==="number")?q.left:Math.max(0,q.limit-(q.used||0));
+  var tpl=t("chat","quotaLeft") || "";
+  el.textContent=tpl.replace("{n}", left);
+  el.style.color = left<=0 ? "#c0563b" : "var(--muted)";
 }
 function chatThrottled(){
   const now=Date.now();
@@ -2333,6 +2368,12 @@ function streamReply(payload, q){
   body: JSON.stringify(payload),
   signal: ctrl.signal
   }).then(resp=>{
+    if(resp.status===429){
+      return resp.json().then(function(j){
+        var c=(j && j.error && j.error.code)||"rate_limited";
+        throw {limitCode:c};
+      }, function(){ throw {limitCode:"rate_limited"}; });
+    }
     if(!resp.ok){
       if(resp.status===503 || resp.status===404){ AI.ready=Promise.resolve(false); AI.lastErr="http_"+resp.status; }
       throw new Error("HTTP "+resp.status);
@@ -2355,8 +2396,27 @@ function streamReply(payload, q){
       return pump();
     });
     return pump();
-  }).then(()=>done(ctrl.signal.aborted))
-    .catch(err=>done(!!(err && err.name==="AbortError") || ctrl.signal.aborted));
+  }).then(()=>{
+    if(!ctrl.signal.aborted && AI.dailyLimit>0 && AI.dailyLeft>=0){
+      AI.dailyLeft=Math.max(0,AI.dailyLeft-1);
+      renderQuota({limit:AI.dailyLimit, left:AI.dailyLeft});
+    }
+    done(ctrl.signal.aborted);
+  })
+    .catch(err=>{
+      if(err && err.limitCode){
+        if(tm0) tm0.remove();
+        AI.busy=false; AI.ctrl=null;
+        if(err.limitCode==="daily_limit"){
+          if(AI.dailyLimit>0){ AI.dailyLeft=0; renderQuota({limit:AI.dailyLimit, left:0}); }
+          addBubble(t("chat","dailyLimit") || "今天的对话次数已经用完啦，明天再来找我～", "bot");
+        } else {
+          addBubble(t("chat","rate") || "说得好快，歇一下再聊～", "bot");
+        }
+        return;
+      }
+      done(!!(err && err.name==="AbortError") || ctrl.signal.aborted);
+    });
 }
 function botReply(q){
   const turns = AI.maxTurns || 8;
@@ -2379,7 +2439,8 @@ function botReply(q){
   const payload = {
     messages: AI.history.slice(-turns*2).concat([{role:"user",content:q}]),
     profile: (typeof data!=="undefined" ? data : null),
-    lang: (typeof lang==="string" ? lang : "zh")
+    lang: (typeof lang==="string" ? lang : "zh"),
+    deviceId: deviceId()
   };
   AI.history.push({role:"user", content:q});
   AI.history = AI.history.slice(-turns*2);
@@ -4583,7 +4644,9 @@ const BGM = (function(){
           ]},
           {v:"V9", range:"2026-11-02", items:[
             {d:"2026-11-02", v:"V9.0", h:"数字分身接入大模型", p:"数字分身换成真模型（DeepSeek），回答不再靠预设话术；语气设定为幽默风趣、时而严肃、单纯又有点古灵精怪，也会坦然承认自己有对象。"},
-            {d:"2026-11-02", v:"V9.1", h:"线上部署能力", p:"后端支持云端部署：新增 OSS 留言存储与无静态目录运行模式，并附阿里云函数计算部署清单，线上留言可持久保存。"}
+            {d:"2026-11-02", v:"V9.1", h:"线上部署能力", p:"后端支持云端部署：新增 OSS 留言存储与无静态目录运行模式，并附阿里云函数计算部署清单，线上留言可持久保存。"},
+            {d:"2026-11-02", v:"V9.2", h:"正式上线", p:"后端部署到阿里云函数计算，线上访客用真实 DeepSeek 模型对话，留言通过 OSS 持久保存。"},
+            {d:"2026-11-02", v:"V9.3", h:"每日说话额度", p:"每台设备每天可以和数字分身聊 10 次，输入框下方会显示今天还剩几次，用完次日自动恢复。"}
           ]}
         ],
         close:"关闭"
@@ -4636,7 +4699,9 @@ const BGM = (function(){
           ]},
           {v:"V9", range:"2026-11-02", items:[
             {d:"2026-11-02", v:"V9.0", h:"數字分身接入大模型", p:"數字分身換成真模型（DeepSeek），回答不再靠預設話術；語氣設定為幽默風趣、時而嚴肅、單純又有點古靈精怪，也會坦然承認自己有對象。"},
-            {d:"2026-11-02", v:"V9.1", h:"線上部署能力", p:"後端支援雲端部署：新增 OSS 留言儲存與無靜態目錄執行模式，並附阿里雲函數計算部署清單，線上留言可持久保存。"}
+            {d:"2026-11-02", v:"V9.1", h:"線上部署能力", p:"後端支援雲端部署：新增 OSS 留言儲存與無靜態目錄執行模式，並附阿里雲函數計算部署清單，線上留言可持久保存。"},
+            {d:"2026-11-02", v:"V9.2", h:"正式上線", p:"後端部署到阿里雲函數計算，線上訪客用真實 DeepSeek 模型對話，留言透過 OSS 持久保存。"},
+            {d:"2026-11-02", v:"V9.3", h:"每日說話額度", p:"每台裝置每天可以和數字分身聊 10 次，輸入框下方會顯示今天還剩幾次，用完次日自動恢復。"}
           ]}
         ],
         close:"關閉"
@@ -4689,7 +4754,9 @@ const BGM = (function(){
           ]},
           {v:"V9", range:"2026-11-02", items:[
             {d:"2026-11-02", v:"V9.0", h:"Digital twin goes live", p:"The digital twin now runs on a real model (DeepSeek) instead of canned replies, with a playful-but-serious voice and a cheerful nod to being taken."},
-            {d:"2026-11-02", v:"V9.1", h:"Cloud deployment ready", p:"The backend can now run in the cloud: OSS-backed feedback storage, an API-only mode, and an Alibaba Cloud Function Compute guide, so messages survive restarts."}
+            {d:"2026-11-02", v:"V9.1", h:"Cloud deployment ready", p:"The backend can now run in the cloud: OSS-backed feedback storage, an API-only mode, and an Alibaba Cloud Function Compute guide, so messages survive restarts."},
+            {d:"2026-11-02", v:"V9.2", h:"Live in the cloud", p:"The backend now runs on Alibaba Cloud Function Compute, so visitors chat with the real DeepSeek model and messages persist in OSS."},
+            {d:"2026-11-02", v:"V9.3", h:"Daily chat quota", p:"Each device gets 10 chats a day with the avatar, with the remaining count shown under the input box and reset the next day."}
           ]}
         ],
         close:"Close"
