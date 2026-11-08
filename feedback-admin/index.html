@@ -1,0 +1,1327 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="dark" />
+<title>反馈箱管理端 · Cuprum</title>
+<style>
+/* ==========================================================================
+   反馈箱管理端 —— 独立所有者后台
+   对接与个人主页反馈箱相同的 Supabase 项目（feedback / feedback_replies）
+   视觉：暗色专业后台，青蓝主色，呼应主页 Cuprum 主题
+   ========================================================================== */
+*,*::before,*::after{box-sizing:border-box}
+:root{
+  --bg:#080b12; --bg2:#0c111b; --panel:#111826; --panel2:#151d2e;
+  --line:rgba(255,255,255,.08); --line2:rgba(255,255,255,.14);
+  --ink:#e8eef9; --ink2:#9fb0c8; --ink3:#6b7c96;
+  --brand:#7fe7ff; --brand2:#5b8cff; --ok:#46d39a; --warn:#ffb454;
+  --danger:#ff6b81; --unread:#5b8cff;
+  --radius:14px; --radius-sm:10px;
+  --shadow:0 18px 50px -20px rgba(0,0,0,.9);
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+  --sans:system-ui,-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+}
+html,body{margin:0;padding:0}
+body{
+  min-height:100vh; background:
+    radial-gradient(1100px 620px at 82% -12%, rgba(91,140,255,.16), transparent 60%),
+    radial-gradient(900px 520px at 0% 0%, rgba(127,231,255,.10), transparent 55%),
+    linear-gradient(180deg,#080b12,#0a0f19 60%,#080b12);
+  color:var(--ink); font-family:var(--sans); font-size:15px; line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+a{color:var(--brand)}
+::selection{background:rgba(127,231,255,.28)}
+::-webkit-scrollbar{width:11px;height:11px}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.14);border-radius:8px;border:3px solid transparent;background-clip:padding-box}
+::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.22);background-clip:padding-box}
+.mono{font-family:var(--mono)}
+
+/* ---------- 布局 ---------- */
+.wrap{max-width:1220px;margin:0 auto;padding:0 20px}
+.topbar{
+  position:sticky;top:0;z-index:40;backdrop-filter:blur(14px);
+  background:rgba(8,11,18,.78);border-bottom:1px solid var(--line);
+}
+.topbar__in{display:flex;align-items:center;gap:14px;height:62px}
+.brand{display:flex;align-items:center;gap:11px;font-weight:700;letter-spacing:.2px}
+.brand__mark{
+  width:32px;height:32px;border-radius:9px;display:grid;place-items:center;flex:0 0 auto;
+  background:linear-gradient(150deg,#7fe7ff,#5b8cff);color:#071018;font-weight:800;font-size:15px;
+  box-shadow:0 0 0 1px rgba(255,255,255,.18) inset,0 8px 22px -10px rgba(95,150,255,.9);
+}
+.brand__sub{color:var(--ink3);font-weight:500;font-size:12.5px;margin-left:2px}
+.spacer{flex:1 1 auto}
+.conn{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--ink2);
+  border:1px solid var(--line);border-radius:999px;padding:5px 11px;background:rgba(255,255,255,.03)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--ink3);flex:0 0 auto}
+.dot.on{background:var(--ok);box-shadow:0 0 0 4px rgba(70,211,154,.16)}
+.dot.off{background:var(--ink3)}
+.dot.err{background:var(--danger);box-shadow:0 0 0 4px rgba(255,107,129,.16)}
+
+.btn{
+  display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line2);
+  background:rgba(255,255,255,.04);color:var(--ink);border-radius:10px;padding:8px 13px;
+  font-size:13.5px;font-weight:600;transition:.16s;white-space:nowrap;
+}
+.btn:hover{background:rgba(255,255,255,.09);border-color:rgba(255,255,255,.24)}
+.btn:active{transform:translateY(1px)}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.btn--primary{background:linear-gradient(150deg,#7fe7ff,#5b8cff);color:#061019;border-color:transparent;font-weight:800}
+.btn--primary:hover{filter:brightness(1.06);background:linear-gradient(150deg,#7fe7ff,#5b8cff)}
+.btn--ghost{background:transparent;border-color:var(--line)}
+.btn--danger{color:var(--danger);border-color:rgba(255,107,129,.4);background:rgba(255,107,129,.08)}
+.btn--danger:hover{background:rgba(255,107,129,.16)}
+.btn--sm{padding:5.5px 10px;font-size:12.5px;border-radius:8px}
+.btn svg{width:15px;height:15px;flex:0 0 auto}
+
+/* ---------- 登录门 ---------- */
+.gate{min-height:calc(100vh - 62px);display:grid;place-items:center;padding:40px 20px}
+.gate__card{
+  width:100%;max-width:430px;background:linear-gradient(180deg,var(--panel),var(--bg2));
+  border:1px solid var(--line);border-radius:20px;padding:34px 30px 28px;box-shadow:var(--shadow);
+}
+.gate__mark{width:52px;height:52px;border-radius:14px;display:grid;place-items:center;margin-bottom:18px;
+  background:linear-gradient(150deg,#7fe7ff,#5b8cff);color:#071018;
+  box-shadow:0 16px 34px -16px rgba(95,150,255,.95)}
+.gate__mark svg{width:26px;height:26px}
+.gate h1{margin:0 0 6px;font-size:21px;letter-spacing:.2px}
+.gate p.sub{margin:0 0 22px;color:var(--ink2);font-size:13.5px}
+.field{margin-bottom:13px}
+.field label{display:block;font-size:12.5px;color:var(--ink2);margin-bottom:6px;font-weight:600}
+.input{
+  width:100%;background:rgba(255,255,255,.045);border:1px solid var(--line2);color:var(--ink);
+  border-radius:10px;padding:11px 13px;outline:none;transition:.16s;font-size:14px;
+}
+.input:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(127,231,255,.14);background:rgba(255,255,255,.06)}
+.input::placeholder{color:var(--ink3)}
+.gate__row{display:flex;gap:10px;align-items:center;margin-top:6px}
+.gate .btn--primary{width:100%;justify-content:center;padding:11px}
+.note{margin-top:16px;font-size:12.5px;color:var(--ink3);line-height:1.65}
+.note code{background:rgba(255,255,255,.07);padding:1px 5px;border-radius:5px;font-family:var(--mono);font-size:12px}
+
+/* ---------- 提示条 ---------- */
+.alert{display:flex;gap:11px;align-items:flex-start;border-radius:12px;padding:12px 14px;font-size:13.5px;
+  border:1px solid var(--line);background:rgba(255,255,255,.03);margin-bottom:16px}
+.alert__ico{flex:0 0 auto;margin-top:1px}
+.alert.warn{border-color:rgba(255,180,84,.4);background:rgba(255,180,84,.09)}
+.alert.warn .alert__ico{color:var(--warn)}
+.alert.err{border-color:rgba(255,107,129,.4);background:rgba(255,107,129,.09)}
+.alert.err .alert__ico{color:var(--danger)}
+.alert.ok{border-color:rgba(70,211,154,.4);background:rgba(70,211,154,.08)}
+.alert.ok .alert__ico{color:var(--ok)}
+.alert b{font-weight:700}
+.alert code{background:rgba(0,0,0,.3);padding:1px 5px;border-radius:5px;font-family:var(--mono);font-size:12px}
+
+/* ---------- 仪表盘 ---------- */
+.dash{padding:26px 0 70px}
+.stats{display:grid;grid-template-columns:repeat(6,1fr);gap:13px;margin-bottom:16px}
+.stat{
+  background:linear-gradient(180deg,var(--panel),rgba(12,17,27,.7));border:1px solid var(--line);
+  border-radius:var(--radius);padding:15px 16px;position:relative;overflow:hidden;
+}
+.stat::after{content:"";position:absolute;inset:0 0 auto;height:2px;
+  background:linear-gradient(90deg,transparent,var(--brand),transparent);opacity:.5}
+.stat__k{font-size:12px;color:var(--ink2);display:flex;align-items:center;gap:6px}
+.stat__k svg{width:14px;height:14px;opacity:.8}
+.stat__v{font-size:27px;font-weight:800;letter-spacing:.5px;margin-top:5px;font-variant-numeric:tabular-nums}
+.stat.is-unread .stat__v{color:var(--unread)}
+.stat.is-ok .stat__v{color:var(--ok)}
+.stat.is-warn .stat__v{color:var(--warn)}
+
+.grid2{display:grid;grid-template-columns:1.6fr 1fr;gap:13px;margin-bottom:16px}
+.card{background:linear-gradient(180deg,var(--panel),rgba(12,17,27,.65));border:1px solid var(--line);
+  border-radius:var(--radius);padding:16px 18px}
+.card__h{display:flex;align-items:center;gap:9px;font-size:13px;color:var(--ink2);font-weight:700;margin-bottom:14px}
+.card__h svg{width:15px;height:15px;color:var(--brand)}
+.trend{display:flex;align-items:flex-end;gap:10px;height:96px}
+.trend__col{flex:1 1 0;display:flex;flex-direction:column;align-items:center;gap:7px;min-width:0}
+.trend__bar{width:100%;max-width:46px;border-radius:6px 6px 3px 3px;background:linear-gradient(180deg,#7fe7ff,#5b8cff);
+  min-height:3px;transition:height .35s ease;box-shadow:0 0 18px -8px rgba(95,150,255,.9)}
+.trend__bar.zero{background:rgba(255,255,255,.12);box-shadow:none}
+.trend__n{font-size:11px;color:var(--ink2);font-variant-numeric:tabular-nums}
+.trend__d{font-size:10.5px;color:var(--ink3)}
+
+/* ---------- 工具栏 ---------- */
+.panel{background:linear-gradient(180deg,var(--panel),rgba(12,17,27,.65));border:1px solid var(--line);
+  border-radius:var(--radius);overflow:hidden}
+.toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:14px 16px;border-bottom:1px solid var(--line)}
+.search{position:relative;flex:1 1 240px;min-width:180px}
+.search svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--ink3)}
+.search input{width:100%;background:rgba(255,255,255,.045);border:1px solid var(--line2);border-radius:10px;
+  padding:9px 12px 9px 34px;outline:none;font-size:13.5px;transition:.16s}
+.search input:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(127,231,255,.13)}
+select.input{width:auto;padding:9px 30px 9px 11px;font-size:13px;background:rgba(255,255,255,.045)}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:rgba(255,255,255,.03);color:var(--ink2);border-radius:999px;
+  padding:6px 12px;font-size:12.5px;font-weight:600;transition:.15s}
+.chip:hover{color:var(--ink);border-color:var(--line2)}
+.chip.on{background:linear-gradient(150deg,rgba(127,231,255,.2),rgba(91,140,255,.2));color:var(--ink);
+  border-color:rgba(127,231,255,.5)}
+.chip .n{opacity:.7;margin-left:5px;font-variant-numeric:tabular-nums}
+
+.bulkbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:10px 16px;border-bottom:1px solid var(--line);
+  background:rgba(127,231,255,.06);font-size:13px}
+.bulkbar b{color:var(--brand)}
+.bulkbar .spacer{flex:1}
+
+/* ---------- 留言列表 ---------- */
+.list{padding:6px}
+.item{border:1px solid var(--line);border-radius:var(--radius-sm);margin:10px;background:rgba(255,255,255,.018);
+  transition:.16s;overflow:hidden}
+.item:hover{border-color:var(--line2);background:rgba(255,255,255,.032)}
+.item.unread{border-left:3px solid var(--unread);background:rgba(91,140,255,.055)}
+.item__top{display:flex;gap:11px;align-items:flex-start;padding:13px 14px}
+.check{flex:0 0 auto;margin-top:3px;width:17px;height:17px;accent-color:#5b8cff;cursor:pointer}
+.item__body{flex:1 1 auto;min-width:0}
+.item__meta{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:9px;font-size:12px;color:var(--ink3)}
+.tag{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--line);border-radius:7px;
+  padding:2.5px 8px;font-size:11.5px;color:var(--ink2);background:rgba(255,255,255,.03)}
+.tag.id{font-family:var(--mono);color:var(--brand);border-color:rgba(127,231,255,.3)}
+.tag.dev{color:var(--ink2)}
+.tag.rel{color:#c6b3ff;border-color:rgba(198,179,255,.3)}
+.badgeUnread{display:inline-flex;align-items:center;gap:5px;color:#cdd9ff;background:rgba(91,140,255,.2);
+  border:1px solid rgba(91,140,255,.45);border-radius:7px;padding:2.5px 8px;font-size:11.5px;font-weight:700}
+.badgeRead{color:var(--ink3)}
+.item__text{white-space:pre-wrap;word-break:break-word;color:var(--ink);font-size:14px}
+.item__text.clamp{display:-webkit-box;-webkit-line-clamp:6;-webkit-box-orient:vertical;overflow:hidden}
+.item__raw{font-family:var(--mono);font-size:12.5px;color:var(--ink2);white-space:pre-wrap;word-break:break-word}
+.thread{margin-top:11px;padding-left:12px;border-left:2px solid rgba(70,211,154,.4);display:flex;flex-direction:column;gap:9px}
+.reply{background:rgba(70,211,154,.07);border:1px solid rgba(70,211,154,.22);border-radius:9px;padding:9px 11px}
+.reply__meta{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--ink3);margin-bottom:4px}
+.reply__who{color:var(--ok);font-weight:700}
+.reply__text{white-space:pre-wrap;word-break:break-word;font-size:13.5px}
+.reply__del{margin-left:auto;background:none;border:none;color:var(--ink3);font-size:11.5px;padding:2px 4px;border-radius:6px}
+.reply__del:hover{color:var(--danger);background:rgba(255,107,129,.1)}
+.item__ops{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.replybox{display:flex;gap:8px;margin-top:11px}
+.replybox input{flex:1;min-width:0;background:rgba(255,255,255,.05);border:1px solid var(--line2);
+  border-radius:9px;padding:9px 12px;outline:none;font-size:13.5px}
+.replybox input:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(127,231,255,.13)}
+.empty{padding:64px 24px;text-align:center;color:var(--ink2)}
+.empty svg{width:44px;height:44px;color:var(--ink3);margin-bottom:12px}
+.empty h3{margin:0 0 5px;color:var(--ink);font-size:16px}
+.empty p{margin:0;font-size:13.5px;color:var(--ink3)}
+.more{padding:16px;text-align:center;border-top:1px solid var(--line)}
+
+/* ---------- 设置抽屉 ---------- */
+.scrim{position:fixed;inset:0;background:rgba(3,5,10,.66);backdrop-filter:blur(3px);z-index:60;
+  opacity:0;pointer-events:none;transition:.2s}
+.scrim.on{opacity:1;pointer-events:auto}
+.drawer{position:fixed;top:0;right:0;height:100%;width:440px;max-width:92vw;z-index:61;
+  background:linear-gradient(180deg,#0e1522,#0a0f19);border-left:1px solid var(--line);
+  transform:translateX(102%);transition:transform .26s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column}
+.drawer.on{transform:none}
+.drawer__h{display:flex;align-items:center;gap:10px;padding:18px 20px;border-bottom:1px solid var(--line);font-weight:700}
+.drawer__h .spacer{flex:1}
+.drawer__b{padding:20px;overflow:auto;flex:1}
+.drawer__f{padding:16px 20px;border-top:1px solid var(--line);display:flex;gap:10px}
+.sec{margin-bottom:24px}
+.sec h4{margin:0 0 10px;font-size:13px;color:var(--brand);letter-spacing:.4px;text-transform:uppercase}
+.sec .input{margin-bottom:11px}
+.hint{font-size:12.5px;color:var(--ink3);line-height:1.7}
+.hint code{background:rgba(255,255,255,.07);padding:1px 5px;border-radius:5px;font-family:var(--mono);font-size:11.5px}
+.iconbtn{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;border:1px solid var(--line);
+  background:rgba(255,255,255,.04);color:var(--ink2)}
+.iconbtn:hover{color:var(--ink);background:rgba(255,255,255,.1)}
+.iconbtn svg{width:16px;height:16px}
+
+/* ---------- toast & modal ---------- */
+.toasts{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);z-index:90;
+  display:flex;flex-direction:column;gap:9px;align-items:center;pointer-events:none}
+.toast{background:rgba(18,24,38,.97);border:1px solid var(--line2);border-radius:11px;padding:10px 16px;
+  font-size:13.5px;box-shadow:var(--shadow);display:flex;gap:9px;align-items:center;max-width:90vw;
+  animation:toastin .22s ease}
+.toast.ok{border-color:rgba(70,211,154,.5)}
+.toast.err{border-color:rgba(255,107,129,.5)}
+.toast svg{width:16px;height:16px;flex:0 0 auto}
+@keyframes toastin{from{opacity:0;transform:translateY(10px)}}
+.modal{position:fixed;inset:0;z-index:80;display:grid;place-items:center;padding:20px;
+  background:rgba(3,5,10,.66);backdrop-filter:blur(3px);opacity:0;pointer-events:none;transition:.18s}
+.modal.on{opacity:1;pointer-events:auto}
+.modal__box{width:100%;max-width:380px;background:linear-gradient(180deg,#131a2a,#0d1320);border:1px solid var(--line2);
+  border-radius:16px;padding:22px;box-shadow:var(--shadow);transform:scale(.96);transition:.18s}
+.modal.on .modal__box{transform:none}
+.modal__box h3{margin:0 0 8px;font-size:16.5px}
+.modal__box p{margin:0 0 18px;color:var(--ink2);font-size:13.5px}
+.modal__ops{display:flex;gap:10px;justify-content:flex-end}
+.spin{width:15px;height:15px;border:2px solid rgba(255,255,255,.28);border-top-color:#fff;border-radius:50%;
+  animation:spin .7s linear infinite;display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
+.hidden{display:none!important}
+
+/* ---------- 响应式 ---------- */
+@media (max-width:1000px){
+  .stats{grid-template-columns:repeat(3,1fr)}
+  .grid2{grid-template-columns:1fr}
+}
+@media (max-width:640px){
+  .wrap{padding:0 13px}
+  .brand__sub{display:none}
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .stat__v{font-size:23px}
+  .toolbar{padding:12px}
+  .search{flex:1 1 100%}
+  .topbar__in{gap:9px;height:58px}
+  .conn span{display:none}
+  .conn{padding:6px 9px}
+}
+</style>
+</head>
+<body>
+
+<!-- ============ 顶部栏 ============ -->
+<header class="topbar">
+  <div class="wrap topbar__in">
+    <div class="brand">
+      <span class="brand__mark">C</span>
+      <span>反馈箱管理端</span>
+      <span class="brand__sub" id="connTarget">Cuprum</span>
+    </div>
+    <span class="spacer"></span>
+    <div class="conn" id="connPill" title="连接状态">
+      <span class="dot off" id="connDot"></span>
+      <span id="connText">未连接</span>
+    </div>
+    <button class="btn btn--sm" id="btnRefresh" title="刷新">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v5h-5"/></svg>
+      刷新
+    </button>
+    <button class="iconbtn" id="btnSettings" title="设置">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </button>
+    <button class="btn btn--sm hidden" id="btnSignout" title="退出登录">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
+      退出
+    </button>
+  </div>
+</header>
+
+<!-- ============ 登录门 ============ -->
+<section class="gate" id="gate">
+  <div class="gate__card">
+    <div class="gate__mark">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    </div>
+    <h1>反馈箱管理端</h1>
+    <p class="sub">用主页所有者邮箱登录，查看、回复、管理全部反馈。</p>
+
+    <div class="alert warn hidden" id="gateWarn" style="margin-bottom:18px">
+      <span class="alert__ico">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+      </span>
+      <span id="gateWarnText"></span>
+    </div>
+
+    <form id="loginForm" autocomplete="on">
+      <div class="field">
+        <label for="email">所有者邮箱</label>
+        <input class="input" id="email" type="email" autocomplete="username" placeholder="you@example.com" required />
+      </div>
+      <div class="field">
+        <label for="password">密码</label>
+        <input class="input" id="password" type="password" autocomplete="current-password" placeholder="登录密码" required />
+      </div>
+      <button class="btn btn--primary" id="btnLogin" type="submit">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/></svg>
+        <span id="loginLabel">登录</span>
+      </button>
+      <div class="gate__row" id="gateStatus" role="status" aria-live="polite" style="color:var(--ink2);font-size:13px"></div>
+    </form>
+
+    <div class="note">
+      登录账号必须是数据库所有者白名单 <code>owner_emails</code> 里的邮箱，
+      且该账号已在 Supabase Authentication → Users 中创建。
+      反馈数据来自与主页相同的 Supabase 项目。
+    </div>
+  </div>
+</section>
+
+<!-- ============ 仪表盘 ============ -->
+<main class="dash hidden" id="dash">
+  <div class="wrap">
+
+    <div class="alert err hidden" id="dashAlert">
+      <span class="alert__ico">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
+      </span>
+      <span id="dashAlertText"></span>
+    </div>
+
+    <!-- 统计 -->
+    <section class="stats">
+      <div class="stat">
+        <div class="stat__k"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>留言总数</div>
+        <div class="stat__v" id="sTotal">0</div>
+      </div>
+      <div class="stat is-unread">
+        <div class="stat__k"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>未读</div>
+        <div class="stat__v" id="sUnread">0</div>
+      </div>
+      <div class="stat is-warn">
+        <div class="stat__k"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>待回复</div>
+        <div class="stat__v" id="sUnreplied">0</div>
+      </div>
+      <div class="stat is-ok">
+        <div class="stat__k"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10h10a5 5 0 0 1 0 10H9"/><path d="M7 6l-4 4 4 4"/></svg>已回复留言</div>
+        <div class="stat__v" id="sReplied">0</div>
+      </div>
+      <div class="stat">
+        <div class="stat__k"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z"/></svg>回复条数</div>
+        <div class="stat__v" id="sReplies">0</div>
+      </div>
+      <div class="stat">
+        <div class="stat__k"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>今日新增</div>
+        <div class="stat__v" id="sToday">0</div>
+      </div>
+    </section>
+
+    <!-- 趋势 + 概览 -->
+    <section class="grid2">
+      <div class="card">
+        <div class="card__h">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l3-4 3 3 5-7"/></svg>
+          近 7 天留言趋势
+        </div>
+        <div class="trend" id="trend"></div>
+      </div>
+      <div class="card">
+        <div class="card__h">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          数据概览
+        </div>
+        <div style="display:flex;flex-direction:column;gap:11px;font-size:13.5px">
+          <div style="display:flex;justify-content:space-between"><span style="color:var(--ink2)">最新留言</span><b id="oLatest" class="mono" style="font-weight:600">—</b></div>
+          <div style="display:flex;justify-content:space-between"><span style="color:var(--ink2)">未读占比</span><b id="oRate" class="mono" style="font-weight:600">—</b></div>
+          <div style="display:flex;justify-content:space-between"><span style="color:var(--ink2)">当前模式</span><b id="oMode" style="font-weight:600">—</b></div>
+          <div style="display:flex;justify-content:space-between"><span style="color:var(--ink2)">已加载</span><b id="oLoaded" class="mono" style="font-weight:600">0</b></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 列表面板 -->
+    <section class="panel">
+      <div class="toolbar">
+        <div class="search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.3-4.3"/></svg>
+          <input id="q" type="search" placeholder="搜索留言内容、昵称、编号…" />
+        </div>
+        <div class="chips" id="chips">
+          <button class="chip on" data-f="all">全部 <span class="n" id="cAll">0</span></button>
+          <button class="chip" data-f="unread">未读 <span class="n" id="cUnread">0</span></button>
+          <button class="chip" data-f="read">已读 <span class="n" id="cRead">0</span></button>
+          <button class="chip" data-f="replied">已回复 <span class="n" id="cReplied">0</span></button>
+          <button class="chip" data-f="unreplied">未回复 <span class="n" id="cUnreplied">0</span></button>
+        </div>
+        <select class="input" id="sort" title="排序">
+          <option value="new">最新在前</option>
+          <option value="old">最早在前</option>
+        </select>
+        <button class="btn btn--sm" id="btnReadAll">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          全部已读
+        </button>
+        <button class="btn btn--sm" id="btnExport">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
+          导出
+        </button>
+      </div>
+
+      <div class="bulkbar hidden" id="bulkbar">
+        <label style="display:flex;align-items:center;gap:7px;cursor:pointer">
+          <input type="checkbox" class="check" id="checkAll" /> 全选
+        </label>
+        <span>已选 <b id="selCount">0</b> 条</span>
+        <span class="spacer"></span>
+        <button class="btn btn--sm" id="btnBulkRead">标记已读</button>
+        <button class="btn btn--sm" id="btnBulkUnread">标记未读</button>
+        <button class="btn btn--sm btn--danger" id="btnBulkDel">删除所选</button>
+      </div>
+
+      <div class="list" id="list"></div>
+    </section>
+  </div>
+</main>
+
+<!-- ============ 设置抽屉 ============ -->
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer" aria-hidden="true">
+  <div class="drawer__h">
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    设置
+    <span class="spacer"></span>
+    <button class="iconbtn" id="btnCloseDrawer" title="关闭">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </button>
+  </div>
+  <div class="drawer__b">
+    <div class="sec">
+      <h4>连接</h4>
+      <label class="hint" style="display:block;margin-bottom:6px">Supabase URL</label>
+      <input class="input" id="cfgUrl" placeholder="https://xxxx.supabase.co" />
+      <label class="hint" style="display:block;margin-bottom:6px">Anon / Publishable Key</label>
+      <input class="input" id="cfgKey" placeholder="sb_publishable_..." />
+      <button class="btn btn--primary btn--sm" id="btnSaveCfg">保存并重连</button>
+    </div>
+
+    <div class="sec">
+      <h4>当前状态</h4>
+      <div class="hint" id="cfgStatus">未连接</div>
+    </div>
+
+    <div class="sec">
+      <h4>数据库结构</h4>
+      <div class="hint">
+        管理端的「回复 / 已读 / 删除」需要所有者表结构。<br />
+        请在 Supabase SQL Editor 运行仓库里的 <code>supabase/schema.sql</code>（幂等，可重复执行）。<br /><br />
+        它会在 <code>feedback</code> 上启用 RLS 所有者策略，并创建 <code>owner_emails</code>、
+        <code>feedback_replies</code>、<code>is_owner()</code>。<br /><br />
+        可读但无法管理，说明当前项目只跑了 <code>supabase/public-read.sql</code>（公开只读模式）。
+      </div>
+    </div>
+
+    <div class="sec">
+      <h4>关于</h4>
+      <div class="hint">
+        反馈箱管理端 · 单文件 HTML，无需构建。<br />
+        数据源与个人主页反馈箱相同，登录状态只保存在本浏览器。<br />
+        anon key 可安全放在前端，真正的权限由数据库 RLS 强制执行。
+      </div>
+    </div>
+  </div>
+  <div class="drawer__f">
+    <button class="btn btn--sm" id="btnReloadCfg">还原默认</button>
+    <span class="spacer"></span>
+    <button class="btn btn--sm btn--ghost" id="btnCloseDrawer2">关闭</button>
+  </div>
+</aside>
+
+<!-- ============ 确认弹窗 / Toast ============ -->
+<div class="modal" id="modal">
+  <div class="modal__box">
+    <h3 id="modalTitle">确认操作</h3>
+    <p id="modalText"></p>
+    <div class="modal__ops">
+      <button class="btn btn--sm btn--ghost" id="modalCancel">取消</button>
+      <button class="btn btn--sm btn--danger" id="modalOk">确认</button>
+    </div>
+  </div>
+</div>
+<div class="toasts" id="toasts"></div>
+
+<script type="module">
+/* ==========================================================================
+   反馈箱管理端 · 逻辑
+   ========================================================================== */
+const SDK_URL = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+
+/* 默认连接 = 个人主页反馈箱所用的 Supabase 项目 */
+const DEFAULT_CFG = {
+  url: "https://yufszozqwnjixsoiikdf.supabase.co",
+  key: "sb_publishable_1BVyGF6XHgs0kl9x9XsM6A_deLSKACZ"
+};
+const CFG_KEY = "cuprum_fbadmin_cfg";
+const PAGE_SIZE = 300;
+const LOAD_LIMIT = 1000;
+
+const SEL_FULL = "id,message,is_read,created_at,feedback_replies(id,body,from_owner,created_at)";
+const SEL_BARE = "id,message,is_read,created_at";
+
+/* ---------- 工具 ---------- */
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => (
+  { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]
+));
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+function pad(n){ return n < 10 ? "0" + n : "" + n; }
+function fmtTime(ts){
+  if(ts == null || ts === "") return "—";
+  let d;
+  if(typeof ts === "number") d = new Date(ts < 1e12 ? ts * 1000 : ts);
+  else d = new Date(ts);
+  if(isNaN(d.getTime())) return String(ts);
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+function relTime(ts){
+  const d = (typeof ts === "number") ? (ts < 1e12 ? ts*1000 : ts) : new Date(ts).getTime();
+  if(!d || isNaN(d)) return "";
+  const diff = Date.now() - d;
+  if(diff < 60000) return "刚刚";
+  if(diff < 3600000) return Math.floor(diff/60000) + " 分钟前";
+  if(diff < 86400000) return Math.floor(diff/3600000) + " 小时前";
+  if(diff < 7*86400000) return Math.floor(diff/86400000) + " 天前";
+  return "";
+}
+function dayKey(d){ return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
+
+/* 把主页写入 message 的结构化文本拆成字段
+   格式： 【反馈】\n昵称：..\n关系：..\n设备：..\n内容：\n正文 */
+const LAB = {
+  nick: /^(?:昵称|暱稱|nickname|nick)\s*[：:]\s*(.*)$/i,
+  rel:  /^(?:与我的关系|关系|關係|relation)\s*[：:]\s*(.*)$/i,
+  dev:  /^(?:设备|設備|device)\s*[：:]\s*(.*)$/i,
+  con:  /^(?:内容|內容|content|message)\s*[：:]\s*(.*)$/i
+};
+function parseMsg(raw){
+  const text = String(raw == null ? "" : raw);
+  const out = { nick:"", rel:"", dev:"", body:text, parsed:false };
+  const lines = text.split(/\r?\n/);
+  let i = 0, started = false;
+  // 跳过首行标题
+  if(lines.length && /^【.*】\s*$/.test(lines[0].trim())) i = 1;
+  for(; i < lines.length; i++){
+    const ln = lines[i];
+    let m;
+    if((m = LAB.nick.exec(ln.trim()))){ out.nick = m[1].trim(); started = true; continue; }
+    if((m = LAB.rel.exec(ln.trim()))){ out.rel = m[1].trim(); started = true; continue; }
+    if((m = LAB.dev.exec(ln.trim()))){ out.dev = m[1].trim(); started = true; continue; }
+    if((m = LAB.con.exec(ln.trim()))){ out.body = [m[1]].concat(lines.slice(i+1)).join("\n").trim(); out.parsed = true; break; }
+  }
+  if(!out.parsed && started){
+    // 有标签但没「内容：」，取正文兜底
+    out.parsed = true;
+  }
+  if(!out.parsed){ out.body = text; }
+  return out;
+}
+
+/* ---------- 吐司 ---------- */
+const ICO = {
+  ok: '<svg viewBox="0 0 24 24" fill="none" stroke="#46d39a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>',
+  err: '<svg viewBox="0 0 24 24" fill="none" stroke="#ff6b81" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>',
+  info: '<svg viewBox="0 0 24 24" fill="none" stroke="#7fe7ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>'
+};
+function toast(msg, kind = "info", ms = 3200){
+  const el = document.createElement("div");
+  el.className = "toast " + kind;
+  el.innerHTML = (ICO[kind] || ICO.info) + "<span></span>";
+  el.lastChild.textContent = msg;
+  $("#toasts").appendChild(el);
+  setTimeout(() => { el.style.opacity = "0"; el.style.transition = ".3s"; setTimeout(() => el.remove(), 320); }, ms);
+}
+
+/* ---------- 确认模态 ---------- */
+let modalResolve = null;
+function confirmBox(title, text, okLabel = "确认", danger = true){
+  $("#modalTitle").textContent = title;
+  $("#modalText").textContent = text;
+  $("#modalOk").textContent = okLabel;
+  $("#modalOk").className = "btn btn--sm " + (danger ? "btn--danger" : "btn--primary");
+  $("#modal").classList.add("on");
+  return new Promise((res) => { modalResolve = res; });
+}
+function closeModal(v){ $("#modal").classList.remove("on"); if(modalResolve){ modalResolve(v); modalResolve = null; } }
+$("#modalCancel").addEventListener("click", () => closeModal(false));
+$("#modalOk").addEventListener("click", () => closeModal(true));
+$("#modal").addEventListener("click", (e) => { if(e.target === $("#modal")) closeModal(false); });
+
+/* ---------- 配置 ---------- */
+function loadCfg(){
+  try{
+    const raw = JSON.parse(localStorage.getItem(CFG_KEY) || "null");
+    if(raw && raw.url && raw.key) return { url: raw.url, key: raw.key };
+  }catch(e){}
+  return { ...DEFAULT_CFG };
+}
+function saveCfg(c){
+  try{ localStorage.setItem(CFG_KEY, JSON.stringify(c)); }catch(e){}
+}
+let cfg = loadCfg();
+
+/* ---------- 状态 ---------- */
+const state = {
+  client: null, user: null, rows: [], filter: "all", q: "", sort: "new",
+  selected: new Set(), readOnly: false, channel: null, display: PAGE_SIZE,
+  loading: false, live: false, lastErr: ""
+};
+
+/* ---------- Supabase 客户端 ---------- */
+async function getClient(){
+  if(state.client) return state.client;
+  if(!/^https?:\/\//.test(cfg.url) || String(cfg.key).length < 20){
+    throw new Error("Supabase 未配置：请在「设置」里填写 URL 与 anon key");
+  }
+  const mod = await import(SDK_URL);
+  state.client = mod.createClient(cfg.url, cfg.key, {
+    auth: { persistSession:true, autoRefreshToken:true, detectSessionInUrl:false }
+  });
+  return state.client;
+}
+function resetClient(){
+  try{ if(state.client && state.channel) state.client.removeChannel(state.channel); }catch(e){}
+  state.client = null; state.channel = null; state.live = false;
+}
+
+/* ---------- 连接状态 UI ---------- */
+function setConn(kind, text){
+  const dot = $("#connDot");
+  dot.className = "dot " + (kind === "on" ? "on" : kind === "err" ? "err" : "off");
+  $("#connText").textContent = text;
+  try{ $("#connTarget").textContent = new URL(cfg.url).host; }catch(e){ $("#connTarget").textContent = "Cuprum"; }
+}
+
+/* ---------- 登录 ---------- */
+async function tryRestoreSession(){
+  let c;
+  try{ c = await getClient(); }
+  catch(err){ showGateWarn(String(err.message || err)); return; }
+  let session = null;
+  try{
+    const r = await c.auth.getSession();
+    session = r && r.data && r.data.session;
+  }catch(e){}
+  if(!session || !session.user){ return; }
+  // 已有会话：校验是否所有者
+  try{
+    const ok = await checkOwner(c);
+    if(ok){ state.user = session.user; enterDash(); return; }
+    await c.auth.signOut();
+  }catch(e){ /* 校验失败则回到登录门 */ }
+}
+
+function checkOwner(c){
+  return c.rpc("is_owner").then((res) => {
+    if(res && res.error) throw res.error;
+    return !!res.data;
+  });
+}
+
+function isMissingSchema(msg){
+  return /PGRST20|42P01|does not exist|Could not find the (function|table)|schema cache|relation .* does not exist|feedback_replies|owner_emails|is_owner/i.test(String(msg || ""));
+}
+function showGateWarn(text){
+  const box = $("#gateWarn");
+  box.classList.remove("hidden");
+  $("#gateWarnText").innerHTML = text;
+}
+
+$("#loginForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const email = $("#email").value.trim();
+  const pass = $("#password").value;
+  const btn = $("#btnLogin"), label = $("#loginLabel"), st = $("#gateStatus");
+  if(!email || !pass){ st.textContent = "请填写邮箱与密码"; return; }
+  btn.disabled = true;
+  label.innerHTML = '<span class="spin"></span> 登录中…';
+  st.textContent = "";
+  let c;
+  try{
+    c = await getClient();
+    const res = await c.auth.signInWithPassword({ email, password: pass });
+    if(res && res.error) throw new Error("bad:" + (res.error.message || ""));
+    const u = await c.auth.getUser();
+    if(!u || !u.data || !u.data.user) throw new Error("bad:no-user");
+    let owner = false;
+    try{ owner = await checkOwner(c); }
+    catch(err){
+      const raw = String(err.message || err);
+      if(isMissingSchema(raw)){
+        await c.auth.signOut();
+        throw new Error("schema:" + raw);
+      }
+      throw err;
+    }
+    if(!owner){
+      await c.auth.signOut();
+      throw new Error("notowner:");
+    }
+    state.user = u.data.user;
+    $("#password").value = "";
+    toast("登录成功，已进入管理端", "ok");
+    enterDash();
+  }catch(err){
+    const raw = String(err.message || err);
+    if(raw.indexOf("notowner:") === 0){
+      st.innerHTML = '<span style="color:var(--danger)">这个账号不在所有者白名单 <code>owner_emails</code> 里</span>';
+    }else if(raw.indexOf("bad:") === 0){
+      st.innerHTML = '<span style="color:var(--danger)">邮箱或密码不对，请重试</span>';
+    }else if(raw.indexOf("schema:") === 0){
+      showGateWarn("当前 Supabase 项目还没有所有者表结构（<code>owner_emails</code> / <code>feedback_replies</code> / <code>is_owner()</code>）。请先在 SQL Editor 运行 <code>supabase/schema.sql</code>。");
+      st.innerHTML = '<span style="color:var(--danger)">数据库结构未部署</span>';
+    }else{
+      st.innerHTML = '<span style="color:var(--danger)">' + esc(raw) + "</span>";
+    }
+  }finally{
+    btn.disabled = false;
+    label.textContent = "登录";
+  }
+});
+
+/* ---------- 进入 / 退出 ---------- */
+function enterDash(){
+  $("#gate").classList.add("hidden");
+  $("#dash").classList.remove("hidden");
+  $("#btnSignout").classList.remove("hidden");
+  setConn("on", state.user && state.user.email ? state.user.email : "已登录");
+  startRealtime();
+  loadData();
+}
+function showGate(){
+  $("#dash").classList.add("hidden");
+  $("#gate").classList.remove("hidden");
+  $("#btnSignout").classList.add("hidden");
+  setConn("off", "未连接");
+}
+
+$("#btnSignout").addEventListener("click", async () => {
+  const yes = await confirmBox("退出登录", "确定要退出当前所有者账号吗？", "退出", false);
+  if(!yes) return;
+  try{ const c = await getClient(); await c.auth.signOut(); }catch(e){}
+  stopRealtime();
+  state.user = null; state.rows = []; state.selected.clear();
+  showGate();
+  toast("已退出登录", "info");
+});
+
+/* ---------- 加载数据 ---------- */
+async function loadData(opts = {}){
+  if(!state.user) return;
+  if(state.loading) return;
+  state.loading = true;
+  if(!opts.silent) $("#btnRefresh").disabled = true;
+  const c = await getClient();
+  let rows = null, usedFull = true;
+  try{
+    let res = await c.from("feedback").select(SEL_FULL).order("created_at", { ascending:false }).limit(LOAD_LIMIT);
+    if(res.error && isMissingSchema(res.error.message)){
+      usedFull = false;
+      res = await c.from("feedback").select(SEL_BARE).order("created_at", { ascending:false }).limit(LOAD_LIMIT);
+    }
+    if(res.error) throw res.error;
+    rows = res.data || [];
+  }catch(err){
+    const raw = String(err.message || err);
+    state.lastErr = raw;
+    if(isMissingSchema(raw)){
+      // 连 feedback 都读不到：可能是 RLS 未放行或表不存在
+      dashAlert("读取留言失败。<br />若刚部署完，请确认已运行 <code>supabase/schema.sql</code> 且当前账号在 <code>owner_emails</code> 白名单里。<br /><span class='mono'>" + esc(raw.slice(0,220)) + "</span>");
+    }else{
+      dashAlert("加载失败：<span class='mono'>" + esc(raw.slice(0,220)) + "</span>");
+    }
+    setConn("err", "连接异常");
+    state.loading = false;
+    $("#btnRefresh").disabled = false;
+    return;
+  }
+
+  state.readOnly = !usedFull;
+  state.rows = rows.map(mapRow);
+  if(!state.readOnly) clearDashAlert();
+  else dashAlert("当前为<b>只读模式</b>：数据库里没有 <code>feedback_replies</code> / 所有者策略，因此无法回复、标记已读或删除。请运行 <code>supabase/schema.sql</code> 后在设置里刷新。");
+
+  render();
+  setConn("on", state.user.email || "已登录");
+  state.loading = false;
+  $("#btnRefresh").disabled = false;
+}
+
+function mapRow(r){
+  const replies = (r.feedback_replies || [])
+    .slice()
+    .sort((a, b) => String(a.created_at).localeCompare(String(b.created_at)))
+    .map((x) => ({ rid: x.id, body: x.body, at: x.created_at, owner: !!x.from_owner }));
+  const parsed = parseMsg(r.message);
+  return {
+    id: r.id,
+    raw: r.message == null ? "" : String(r.message),
+    body: parsed.body,
+    nick: parsed.nick, rel: parsed.rel, dev: parsed.dev, parsed: parsed.parsed,
+    read: !!r.is_read,
+    at: r.created_at,
+    replies
+  };
+}
+
+function dashAlert(html){
+  $("#dashAlert").classList.remove("hidden");
+  $("#dashAlertText").innerHTML = html;
+}
+function clearDashAlert(){ $("#dashAlert").classList.add("hidden"); }
+
+/* ---------- 过滤 / 统计 ---------- */
+function filtered(){
+  let rows = state.rows.slice();
+  const f = state.filter;
+  if(f === "unread") rows = rows.filter((r) => !r.read);
+  else if(f === "read") rows = rows.filter((r) => r.read);
+  else if(f === "replied") rows = rows.filter((r) => r.replies.length > 0);
+  else if(f === "unreplied") rows = rows.filter((r) => r.replies.length === 0);
+  const q = state.q.trim().toLowerCase();
+  if(q){
+    rows = rows.filter((r) =>
+      r.body.toLowerCase().includes(q) ||
+      r.nick.toLowerCase().includes(q) ||
+      r.rel.toLowerCase().includes(q) ||
+      String(r.id).toLowerCase().includes(q)
+    );
+  }
+  rows.sort((a, b) => {
+    const ta = new Date(a.at).getTime() || 0;
+    const tb = new Date(b.at).getTime() || 0;
+    return state.sort === "new" ? tb - ta : ta - tb;
+  });
+  return rows;
+}
+
+function computeStats(){
+  const all = state.rows;
+  const unread = all.filter((r) => !r.read).length;
+  const replied = all.filter((r) => r.replies.length > 0).length;
+  const unreplied = all.length - replied;
+  const replies = all.reduce((n, r) => n + r.replies.length, 0);
+  const todayKey = dayKey(new Date());
+  const today = all.filter((r) => { const d = new Date(r.at); return !isNaN(d) && dayKey(d) === todayKey; }).length;
+  return { total: all.length, unread, read: all.length - unread, replied, unreplied, replies, today };
+}
+
+/* ---------- 渲染 ---------- */
+function render(){
+  const s = computeStats();
+  $("#sTotal").textContent = s.total;
+  $("#sUnread").textContent = s.unread;
+  $("#sUnreplied").textContent = s.unreplied;
+  $("#sReplied").textContent = s.replied;
+  $("#sReplies").textContent = s.replies;
+  $("#sToday").textContent = s.today;
+
+  $("#cAll").textContent = s.total;
+  $("#cUnread").textContent = s.unread;
+  $("#cRead").textContent = s.read;
+  $("#cReplied").textContent = s.replied;
+  $("#cUnreplied").textContent = s.unreplied;
+
+  const newest = state.rows.length ? state.rows[0] : null;
+  $("#oLatest").textContent = newest ? fmtTime(newest.at) : "—";
+  $("#oRate").textContent = s.total ? Math.round(s.unread / s.total * 100) + "%" : "0%";
+  $("#oMode").textContent = state.readOnly ? "只读" : "完整";
+  $("#oMode").style.color = state.readOnly ? "var(--warn)" : "var(--ok)";
+  $("#oLoaded").textContent = s.total + (s.total >= LOAD_LIMIT ? "+" : "");
+
+  renderTrend();
+  renderList();
+}
+
+function renderTrend(){
+  const days = [];
+  const now = new Date();
+  for(let i = 6; i >= 0; i--){
+    const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
+    days.push({ key: dayKey(d), label: (d.getMonth()+1) + "/" + d.getDate(), n: 0 });
+  }
+  const map = Object.fromEntries(days.map((d) => [d.key, d]));
+  state.rows.forEach((r) => {
+    const d = new Date(r.at);
+    if(isNaN(d)) return;
+    const k = dayKey(d);
+    if(map[k]) map[k].n++;
+  });
+  const max = Math.max(1, ...days.map((d) => d.n));
+  $("#trend").innerHTML = days.map((d) => {
+    const h = Math.round(d.n / max * 78);
+    return '<div class="trend__col">'
+      + '<div class="trend__n">' + d.n + "</div>"
+      + '<div class="trend__bar' + (d.n === 0 ? " zero" : "") + '" style="height:' + (d.n === 0 ? 3 : Math.max(6, h)) + 'px"></div>'
+      + '<div class="trend__d">' + d.label + "</div></div>";
+  }).join("");
+}
+
+function itemHTML(m){
+  const unread = !m.read;
+  const tags = [];
+  if(m.parsed && m.nick) tags.push('<span class="tag">' + esc(m.nick) + "</span>");
+  if(m.parsed && m.rel) tags.push('<span class="tag rel">' + esc(m.rel) + "</span>");
+  if(m.parsed && m.dev) tags.push('<span class="tag dev">' + esc(m.dev) + "</span>");
+  tags.push('<span class="tag id">#' + esc(String(m.id).slice(0, 12)) + "</span>");
+  tags.push(unread
+    ? '<span class="badgeUnread">未读</span>'
+    : '<span class="tag badgeRead">已读</span>');
+
+  const thread = m.replies.length
+    ? '<div class="thread">' + m.replies.map((rp) =>
+        '<div class="reply"><div class="reply__meta">'
+        + '<span class="reply__who">我的回复</span>'
+        + "<span>" + esc(fmtTime(rp.at)) + "</span>"
+        + (state.readOnly ? "" : '<button class="reply__del" data-act="delrep" data-rid="' + esc(rp.rid) + '">删除</button>')
+        + '</div><div class="reply__text">' + esc(rp.body) + "</div></div>").join("")
+      + "</div>"
+    : "";
+
+  const ops = state.readOnly ? "" : (
+    '<div class="item__ops">'
+    + '<button class="btn btn--sm" data-act="reply" data-id="' + esc(m.id) + '">回复</button>'
+    + (unread
+        ? '<button class="btn btn--sm" data-act="read" data-id="' + esc(m.id) + '">标记已读</button>'
+        : '<button class="btn btn--sm" data-act="unread" data-id="' + esc(m.id) + '">标记未读</button>')
+    + '<button class="btn btn--sm" data-act="copy" data-id="' + esc(m.id) + '">复制</button>'
+    + '<button class="btn btn--sm btn--danger" data-act="del" data-id="' + esc(m.id) + '">删除</button>'
+    + "</div>"
+  );
+
+  return '<div class="item' + (unread ? " unread" : "") + '" data-id="' + esc(m.id) + '">'
+    + '<div class="item__top">'
+    + (state.readOnly ? "" : '<input type="checkbox" class="check" data-check="' + esc(m.id) + '"' + (state.selected.has(String(m.id)) ? " checked" : "") + " />")
+    + '<div class="item__body">'
+    + '<div class="item__meta">' + tags.join("") + "<span>" + esc(fmtTime(m.at)) + (relTime(m.at) ? " · " + esc(relTime(m.at)) : "") + "</span></div>"
+    + '<div class="item__text">' + esc(m.body) + "</div>"
+    + thread
+    + (state.readOnly ? "" : '<div class="replybox hidden" data-box="' + esc(m.id) + '">'
+        + '<input type="text" maxlength="1000" placeholder="写一句回复…" data-reply-input />'
+        + '<button class="btn btn--sm btn--primary" data-act="send" data-id="' + esc(m.id) + '">发送</button>'
+      + "</div>")
+    + ops
+    + "</div></div></div>";
+}
+
+function renderList(){
+  const rows = filtered();
+  const shown = rows.slice(0, state.display);
+  const list = $("#list");
+  if(!rows.length){
+    list.innerHTML = '<div class="empty">'
+      + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>'
+      + "<h3>" + (state.q || state.filter !== "all" ? "没有符合条件的留言" : "还没有收到反馈") + "</h3>"
+      + "<p>" + (state.q || state.filter !== "all" ? "换个筛选条件或清空搜索试试" : "访客在主页提交留言后会出现在这里") + "</p>"
+      + "</div>";
+    updateBulkBar(0);
+    return;
+  }
+  let html = shown.map(itemHTML).join("");
+  if(rows.length > state.display){
+    html += '<div class="more"><button class="btn" id="btnMore">加载更多（还有 ' + (rows.length - state.display) + " 条）</button></div>";
+  }
+  list.innerHTML = html;
+  const more = $("#btnMore");
+  if(more) more.addEventListener("click", () => { state.display += PAGE_SIZE; renderList(); });
+  updateBulkBar(rows.length);
+}
+
+function updateBulkBar(visibleCount){
+  const bar = $("#bulkbar");
+  if(state.readOnly){ bar.classList.add("hidden"); return; }
+  bar.classList.remove("hidden");
+  $("#selCount").textContent = state.selected.size;
+  const ids = filtered().map((r) => String(r.id));
+  $("#checkAll").checked = ids.length > 0 && ids.every((id) => state.selected.has(id));
+}
+
+/* ---------- 列表交互 ---------- */
+$("#list").addEventListener("click", async (e) => {
+  const btn = e.target.closest("button[data-act]");
+  if(!btn) return;
+  const act = btn.getAttribute("data-act");
+  const id = btn.getAttribute("data-id");
+  const rid = btn.getAttribute("data-rid");
+  if(act === "reply"){
+    const box = $("#list").querySelector('[data-box="' + cssEsc(id) + '"]');
+    if(box){ box.classList.toggle("hidden"); if(!box.classList.contains("hidden")){ const i = box.querySelector("input"); if(i) i.focus(); } }
+    return;
+  }
+  if(act === "send"){
+    const box = btn.closest(".replybox");
+    const input = box ? box.querySelector("input") : null;
+    const text = input ? input.value.trim() : "";
+    if(!text){ if(input) input.focus(); return; }
+    await doReply(id, text, btn, input);
+    return;
+  }
+  if(act === "read"){ await doRead([id], true); return; }
+  if(act === "unread"){ await doRead([id], false); return; }
+  if(act === "del"){
+    const yes = await confirmBox("删除留言", "删除后无法恢复，确定删除这条留言及其全部回复吗？", "删除");
+    if(!yes) return;
+    await doDelete([id]);
+    return;
+  }
+  if(act === "delrep"){
+    const yes = await confirmBox("删除回复", "确定删除这条回复吗？", "删除");
+    if(!yes) return;
+    await doDeleteReply(rid);
+    return;
+  }
+  if(act === "copy"){ await copyItem(id); return; }
+});
+$("#list").addEventListener("change", (e) => {
+  const cb = e.target.closest("input[data-check]");
+  if(!cb) return;
+  const id = cb.getAttribute("data-check");
+  if(cb.checked) state.selected.add(String(id)); else state.selected.delete(String(id));
+  updateBulkBar();
+});
+$("#list").addEventListener("keydown", (e) => {
+  if(e.key !== "Enter") return;
+  const input = e.target.closest("input[data-reply-input]");
+  if(!input) return;
+  e.preventDefault();
+  const box = input.closest(".replybox");
+  const id = box.getAttribute("data-box");
+  const btn = box.querySelector("button[data-act='send']");
+  const text = input.value.trim();
+  if(text) doReply(id, text, btn, input);
+});
+
+/* 转义用于属性选择器的 id */
+function cssEsc(s){ return String(s).replace(/["\\]/g, "\\$&"); }
+
+/* ---------- 数据操作 ---------- */
+async function doReply(id, text, btn, input){
+  if(state.readOnly){ toast("只读模式：请先部署 schema.sql", "err"); return; }
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spin"></span>';
+  try{
+    const c = await getClient();
+    const res = await c.from("feedback_replies").insert({ feedback_id: id, body: text, from_owner: true });
+    if(res.error) throw res.error;
+    if(input) input.value = "";
+    await loadData({ silent:true });
+    toast("回复已发送", "ok");
+  }catch(err){
+    toast("回复失败：" + shortErr(err), "err");
+  }finally{
+    btn.disabled = false;
+    btn.textContent = "发送";
+  }
+}
+
+async function doRead(ids, read){
+  if(state.readOnly){ toast("只读模式：请先部署 schema.sql", "err"); return; }
+  ids = (ids || []).map(String).filter(Boolean);
+  if(!ids.length){ toast("请先勾选留言", "info", 1600); return; }
+  try{
+    const c = await getClient();
+    const res = await c.from("feedback").update({ is_read: read }).in("id", ids);
+    if(res.error) throw res.error;
+    await loadData({ silent:true });
+    toast(read ? "已标记为已读" : "已标记为未读", "ok", 1800);
+  }catch(err){
+    toast("操作失败：" + shortErr(err), "err");
+  }
+}
+
+async function markAllRead(){
+  if(state.readOnly){ toast("只读模式：请先部署 schema.sql", "err"); return; }
+  const unread = state.rows.filter((r) => !r.read);
+  if(!unread.length){ toast("没有未读留言", "info", 1800); return; }
+  const yes = await confirmBox("全部标为已读", "把当前 " + unread.length + " 条未读留言全部标为已读？", "全部已读", false);
+  if(!yes) return;
+  try{
+    const c = await getClient();
+    const res = await c.from("feedback").update({ is_read:true }).eq("is_read", false);
+    if(res.error) throw res.error;
+    await loadData({ silent:true });
+    toast("已全部标为已读", "ok");
+  }catch(err){ toast("操作失败：" + shortErr(err), "err"); }
+}
+
+async function doDelete(ids){
+  if(state.readOnly){ toast("只读模式：请先部署 schema.sql", "err"); return; }
+  ids = (ids || []).map(String).filter(Boolean);
+  if(!ids.length){ toast("请先勾选留言", "info", 1600); return; }
+  try{
+    const c = await getClient();
+    const res = await c.from("feedback").delete().in("id", ids).select("id");
+    if(res.error) throw res.error;
+    if(!res.data || !res.data.length) throw new Error("没有删除任何行：可能不存在或没有删除权限");
+    ids.forEach((id) => state.selected.delete(String(id)));
+    await loadData({ silent:true });
+    toast("已删除 " + ids.length + " 条留言", "ok");
+  }catch(err){ toast("删除失败：" + shortErr(err), "err"); }
+}
+
+async function doDeleteReply(rid){
+  if(state.readOnly){ toast("只读模式：请先部署 schema.sql", "err"); return; }
+  try{
+    const c = await getClient();
+    const res = await c.from("feedback_replies").delete().eq("id", rid).select("id");
+    if(res.error) throw res.error;
+    if(!res.data || !res.data.length) throw new Error("没有删除任何行：可能没有删除权限");
+    await loadData({ silent:true });
+    toast("回复已删除", "ok");
+  }catch(err){ toast("删除失败：" + shortErr(err), "err"); }
+}
+
+async function copyItem(id){
+  const m = state.rows.find((r) => String(r.id) === String(id));
+  if(!m) return;
+  const lines = [
+    "编号：" + m.id,
+    "时间：" + fmtTime(m.at),
+    m.nick ? "昵称：" + m.nick : "",
+    m.rel ? "关系：" + m.rel : "",
+    m.dev ? "设备：" + m.dev : "",
+    "内容：",
+    m.body
+  ].filter(Boolean);
+  if(m.replies.length){
+    lines.push("", "回复：");
+    m.replies.forEach((rp) => lines.push("- " + fmtTime(rp.at) + "：" + rp.body));
+  }
+  try{
+    await navigator.clipboard.writeText(lines.join("\n"));
+    toast("已复制到剪贴板", "ok", 1600);
+  }catch(e){
+    toast("复制失败，请手动选择文本", "err");
+  }
+}
+
+function shortErr(err){
+  const m = String(err && (err.message || err.details || err.hint) || err);
+  return m.length > 160 ? m.slice(0, 160) + "…" : m;
+}
+
+/* ---------- 工具栏交互 ---------- */
+$("#q").addEventListener("input", (e) => { state.q = e.target.value; state.display = PAGE_SIZE; renderList(); });
+$("#sort").addEventListener("change", (e) => { state.sort = e.target.value; renderList(); });
+$("#chips").addEventListener("click", (e) => {
+  const chip = e.target.closest(".chip");
+  if(!chip) return;
+  document.querySelectorAll("#chips .chip").forEach((c) => c.classList.remove("on"));
+  chip.classList.add("on");
+  state.filter = chip.getAttribute("data-f");
+  state.display = PAGE_SIZE;
+  renderList();
+});
+$("#checkAll").addEventListener("change", (e) => {
+  const ids = filtered().map((r) => String(r.id));
+  if(e.target.checked) ids.forEach((id) => state.selected.add(id));
+  else ids.forEach((id) => state.selected.delete(id));
+  renderList();
+});
+$("#btnBulkRead").addEventListener("click", () => doRead([...state.selected], true));
+$("#btnBulkUnread").addEventListener("click", () => doRead([...state.selected], false));
+$("#btnBulkDel").addEventListener("click", async () => {
+  const ids = [...state.selected];
+  if(!ids.length){ toast("请先勾选留言", "info", 1600); return; }
+  const yes = await confirmBox("删除所选", "删除选中的 " + ids.length + " 条留言及其回复？此操作不可恢复。", "删除");
+  if(!yes) return;
+  await doDelete(ids);
+});
+
+$("#btnRefresh").addEventListener("click", () => loadData());
+$("#btnReadAll").addEventListener("click", markAllRead);
+
+/* 导出 */
+$("#btnExport").addEventListener("click", () => {
+  const rows = filtered();
+  if(!rows.length){ toast("没有可导出的数据", "info"); return; }
+  const csv = toCSV(rows);
+  const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "feedback-" + dayKey(new Date()) + ".csv";
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 4000);
+  toast("已导出 " + rows.length + " 条为 CSV", "ok");
+});
+function toCSV(rows){
+  const head = ["编号", "时间", "昵称", "关系", "设备", "已读", "正文", "回复数", "回复内容"];
+  const cell = (v) => {
+    let s = String(v == null ? "" : v).replace(/\r?\n/g, " ");
+    if(/[",]/.test(s)) s = '"' + s.replace(/"/g, '""') + '"';
+    return s;
+  };
+  const lines = [head.join(",")];
+  rows.forEach((r) => {
+    lines.push([
+      r.id, fmtTime(r.at), r.nick, r.rel, r.dev, r.read ? "是" : "否",
+      r.body, r.replies.length,
+      r.replies.map((x) => fmtTime(x.at) + " " + x.body).join(" | ")
+    ].map(cell).join(","));
+  });
+  return lines.join("\r\n");
+}
+
+/* ---------- 实时刷新 ---------- */
+function startRealtime(){
+  stopRealtime();
+  if(!state.client) return;
+  try{
+    state.channel = state.client
+      .channel("fbadmin-live")
+      .on("postgres_changes", { event: "*", schema: "public", table: "feedback" }, debouncedReload)
+      .on("postgres_changes", { event: "*", schema: "public", table: "feedback_replies" }, debouncedReload)
+      .subscribe((status) => {
+        state.live = status === "SUBSCRIBED";
+      });
+  }catch(e){ state.channel = null; }
+}
+function stopRealtime(){
+  try{ if(state.client && state.channel) state.client.removeChannel(state.channel); }catch(e){}
+  state.channel = null; state.live = false;
+}
+let reloadTimer = null;
+function debouncedReload(){
+  clearTimeout(reloadTimer);
+  reloadTimer = setTimeout(() => loadData({ silent:true }), 700);
+}
+/* 兜底轮询：Realtime 未开启时也能保持新鲜 */
+setInterval(() => {
+  if(state.user && document.visibilityState === "visible" && !state.loading) loadData({ silent:true });
+}, 30000);
+document.addEventListener("visibilitychange", () => {
+  if(document.visibilityState === "visible" && state.user) loadData({ silent:true });
+});
+
+/* ---------- 设置抽屉 ---------- */
+function openDrawer(){
+  $("#cfgUrl").value = cfg.url;
+  $("#cfgKey").value = cfg.key;
+  const c = state.client;
+  $("#cfgStatus").innerHTML = state.user
+    ? ("已登录：<b>" + esc(state.user.email || "") + "</b><br />模式：" + (state.readOnly ? "<b style='color:var(--warn)'>只读</b>" : "<b style='color:var(--ok)'>完整</b>") + "<br />实时：" + (state.live ? "已开启" : "轮询兜底"))
+    : "未登录";
+  $("#scrim").classList.add("on");
+  $("#drawer").classList.add("on");
+  $("#drawer").setAttribute("aria-hidden", "false");
+}
+function closeDrawer(){
+  $("#scrim").classList.remove("on");
+  $("#drawer").classList.remove("on");
+  $("#drawer").setAttribute("aria-hidden", "true");
+}
+$("#btnSettings").addEventListener("click", openDrawer);
+$("#btnCloseDrawer").addEventListener("click", closeDrawer);
+$("#btnCloseDrawer2").addEventListener("click", closeDrawer);
+$("#scrim").addEventListener("click", closeDrawer);
+document.addEventListener("keydown", (e) => { if(e.key === "Escape"){ if($("#modal").classList.contains("on")) closeModal(false); else closeDrawer(); } });
+
+$("#btnSaveCfg").addEventListener("click", async () => {
+  const url = $("#cfgUrl").value.trim().replace(/\/+$/, "");
+  const key = $("#cfgKey").value.trim();
+  if(!/^https?:\/\//.test(url) || key.length < 20){
+    toast("请填写有效的 URL 与 anon key", "err");
+    return;
+  }
+  cfg = { url, key };
+  saveCfg(cfg);
+  resetClient();
+  if(state.user){
+    try{ await getClient(); }catch(e){}
+  }
+  toast("配置已保存", "ok");
+  $("#cfgStatus").innerHTML = "配置已保存，重新登录后生效。<br />若已登录会自动重连。";
+  closeDrawer();
+  showGate();
+  tryRestoreSession();
+});
+$("#btnReloadCfg").addEventListener("click", () => {
+  $("#cfgUrl").value = DEFAULT_CFG.url;
+  $("#cfgKey").value = DEFAULT_CFG.key;
+  toast("已填入默认配置，点「保存并重连」生效", "info");
+});
+
+/* ---------- 启动 ---------- */
+(async function init(){
+  $("#cfgUrl").value = cfg.url;
+  $("#cfgKey").value = cfg.key;
+  setConn("off", "连接中…");
+  await tryRestoreSession();
+  if(!state.user){ showGate(); }
+})();
+</script>
+</body>
+</html>
