@@ -87,6 +87,10 @@ DEFAULTS = {
     "FB_OSS_AK_SECRET": "",       # RAM 用户 AccessKeySecret
     "FB_OSS_KEY": "cuprum/feedback.json",   # 对象名，可带目录
     "ALLOW_ORIGIN": "*",          # 允许跨域来源：同源部署保持 * 即可；也可填 Pages 域名
+    # ---- 每日对话配额（按设备） ----
+    "DAILY_LIMIT": "10",          # 每台设备每天最多对话几次（0 = 不限）
+    "FB_USAGE_KEY": "cuprum/usage.json",   # 配额计数对象（走 OSS 时）
+    "USAGE_FILE": "",             # 本地模式文件，默认 server/data/usage.json
 }
 
 
@@ -382,20 +386,20 @@ def _oss_ready():
     )
 
 
-def _oss_target():
+def _oss_target(key=None):
     bucket = CFG["FB_OSS_BUCKET"].strip()
     endpoint = CFG["FB_OSS_ENDPOINT"].strip()
     for prefix in ("https://", "http://"):
         if endpoint.startswith(prefix):
             endpoint = endpoint[len(prefix):]
     endpoint = endpoint.rstrip("/")
-    key = (CFG.get("FB_OSS_KEY") or "cuprum/feedback.json").strip().lstrip("/")
+    key = (key or CFG.get("FB_OSS_KEY") or "cuprum/feedback.json").strip().lstrip("/")
     return "https://%s.%s/%s" % (bucket, endpoint, key), bucket, key
 
 
-def _oss_call(method, body=None):
+def _oss_call(method, body=None, key=None):
     """用 OSS V1 签名直接调 REST，避免引入 oss2 / crcmod 这类二进制依赖。"""
-    url, bucket, key = _oss_target()
+    url, bucket, key = _oss_target(key)
     ctype = "application/json; charset=utf-8" if body is not None else ""
     date = formatdate(usegmt=True)
     string_to_sign = "%s\n\n%s\n%s\n/%s/%s" % (method, ctype, date, bucket, key)
@@ -485,6 +489,108 @@ def fb_save_locked():
         _fb_mem_at = time.time()
     except Exception as exc:
         sys.stderr.write("[feedback] 写入失败: %s\n" % exc)
+
+
+# ---------------------------------------------------------------------------
+# 每日对话配额（按设备）
+#   计数落盘位置与留言一致：配了 OSS 就走 OSS，否则写本地 data/usage.json。
+#   结构: {"date": "2026-11-02", "devices": {"<deviceId>": 3}}
+#   日期变化自动重置，不用额外清理任务。
+# ---------------------------------------------------------------------------
+_quota_lock = threading.Lock()
+USAGE_FILE = (CFG.get("USAGE_FILE") or "").strip() or os.path.join(BASE_DIR, "data", "usage.json")
+USAGE_OSS_KEY = (CFG.get("FB_USAGE_KEY") or "cuprum/usage.json").strip().lstrip("/")
+
+
+def _today_str():
+    """按服务器本地时区取日期（FC 上靠 TZ=Asia/Shanghai 固定为北京时间）。"""
+    return time.strftime("%Y-%m-%d", time.localtime())
+
+
+def _usage_read():
+    if _oss_ready():
+        try:
+            raw = json.loads(_oss_call("GET", key=USAGE_OSS_KEY).decode("utf-8"))
+            if isinstance(raw, dict):
+                return raw
+        except urllib.error.HTTPError as exc:
+            if exc.code != 404:        # 404 = 还没有计数文件，属正常
+                sys.stderr.write("[quota] OSS 读取失败(%s)\n" % exc.code)
+        except Exception as exc:
+            sys.stderr.write("[quota] OSS 读取失败: %s\n" % exc)
+        return {}
+    try:
+        if os.path.exists(USAGE_FILE):
+            with open(USAGE_FILE, "r", encoding="utf-8-sig") as fh:
+                raw = json.load(fh)
+            if isinstance(raw, dict):
+                return raw
+    except Exception as exc:
+        sys.stderr.write("[quota] 本地读取失败: %s\n" % exc)
+    return {}
+
+
+def _usage_write(data):
+    if _oss_ready():
+        try:
+            body = json.dumps(data, ensure_ascii=False).encode("utf-8")
+            _oss_call("PUT", body, key=USAGE_OSS_KEY)
+        except Exception as exc:
+            sys.stderr.write("[quota] OSS 写入失败: %s\n" % exc)
+        return
+    try:
+        directory = os.path.dirname(USAGE_FILE)
+        if directory and not os.path.isdir(directory):
+            os.makedirs(directory)
+        tmp = USAGE_FILE + ".tmp"
+        with open(tmp, "w", encoding="utf-8") as fh:
+            json.dump(data, fh, ensure_ascii=False)
+        os.replace(tmp, USAGE_FILE)
+    except Exception as exc:
+        sys.stderr.write("[quota] 本地写入失败: %s\n" % exc)
+
+
+def quota_state(dev):
+    """查询设备今天已用次数，返回 (used, limit)。limit<=0 表示不限。"""
+    limit = as_int("DAILY_LIMIT", 10)
+    if limit <= 0 or not dev:
+        return 0, limit
+    with _quota_lock:
+        data = _usage_read()
+    if data.get("date") != _today_str():
+        return 0, limit
+    devices = data.get("devices")
+    if not isinstance(devices, dict):
+        return 0, limit
+    try:
+        return int(devices.get(dev) or 0), limit
+    except (TypeError, ValueError):
+        return 0, limit
+
+
+def quota_take(dev):
+    """预扣一次额度（先扣后答，防止并发绕过）。返回 (allowed, used, limit)。"""
+    limit = as_int("DAILY_LIMIT", 10)
+    if limit <= 0 or not dev:
+        return True, 0, limit
+    today = _today_str()
+    with _quota_lock:
+        data = _usage_read()
+        if data.get("date") != today:
+            data = {"date": today, "devices": {}}
+        devices = data.get("devices")
+        if not isinstance(devices, dict):
+            devices = {}
+        try:
+            used = int(devices.get(dev) or 0)
+        except (TypeError, ValueError):
+            used = 0
+        if used >= limit:
+            return False, used, limit
+        devices[dev] = used + 1
+        data["devices"] = devices
+        _usage_write(data)
+        return True, used + 1, limit
 
 
 def fb_public(item):
@@ -694,6 +800,8 @@ class Handler(SimpleHTTPRequestHandler):
         query = self._query()
         if path == "/api/health":
             key = CFG.get("API_KEY", "")
+            dev = fb_clean(query.get("deviceId"), 64)
+            used, qlimit = quota_state(dev)
             items, unread = fb_owner_list(1) if fb_token_ok(query.get("token")) else ([], 0)
             self.send_json({
                 "ok": True,
@@ -703,6 +811,13 @@ class Handler(SimpleHTTPRequestHandler):
                 "hasKey": bool(key),
                 "maxTurns": as_int("MAX_TURNS", 8),
                 "ratePerMin": as_int("RATE_PER_MIN", 30),
+                # 每设备每日对话额度（0 = 不限）
+                "dailyLimit": qlimit,
+                "quota": {
+                    "limit": qlimit,
+                    "used": used,
+                    "left": max(0, qlimit - used) if qlimit > 0 else -1,
+                },
                 "feedback": {
                     "open": True,
                     "ownerConfigured": bool((CFG.get("OWNER_TOKEN") or "").strip()),
@@ -975,6 +1090,22 @@ class Handler(SimpleHTTPRequestHandler):
                 msgs.append({"role": role, "content": content})
         if not msgs:
             self.send_json({"error": {"code": "no_messages", "message": "没有有效消息"}}, 400)
+            return
+
+        # ---- 每设备每日额度（先扣后答，避免并发绕过）----
+        dev = clip(payload.get("deviceId"), 64) or clip(self.headers.get("X-Device-Id"), 64)
+        if not dev:
+            dev = "ip-" + re.sub(r"[^0-9a-zA-Z]", "_", ip)
+        allowed, used, qlimit = quota_take(dev)
+        if not allowed:
+            self.send_json({
+                "error": {
+                    "code": "daily_limit",
+                    "message": "今天的 %d 次对话已经用完啦，明天再来找我～" % qlimit,
+                    "limit": qlimit,
+                    "used": used,
+                }
+            }, 429)
             return
 
         lang = payload.get("lang")
