@@ -546,7 +546,7 @@ body.gallery-open{overflow:hidden}
   padding-top:92px;padding-bottom:92px}
 .pc-row>section{padding:0;min-width:0}
 .pc-contact .section-head{text-align:center;margin-bottom:24px}
-.pc-contact .section-head h2{font-size:clamp(1.5rem,2.6vw,1.8rem)}
+.pc-row .section-head h2{font-size:clamp(1.5rem,2.6vw,1.8rem)}
 .pc-contact .section-head p{margin:8px auto 0;max-width:none;font-size:.9rem}
 .pc-contact .contact-card{max-width:none;margin:0;padding:26px 22px;text-align:center}
 .pc-contact .contact-card h3{font-size:1.22rem}
@@ -5084,7 +5084,7 @@ const BGM = (function(){
          images:[{src:"images/xxx.jpg", caption:"图注"}],
          blocks:[{h:"小标题", p:"正文段落"}]
        }
-      已填充：cosplay（图片在 outputs/cosplay/）、photography（35 张，图片在 outputs/photography/，
+      已填充：cosplay（图片在 outputs/cosplay/）、photography（36 张，图片在 outputs/photography/，
        按朝向分块：竖图 3 列 / 横图 3 列）、drawing（5 张，图片在 outputs/drawing/，按原图尺寸
        分块：全景横图整行 + 两张竖图一行 + 两张横图一行，均等比完整显示不裁切）、music（6 张，
        图片在 outputs/music/，横竖成对分块）、food（54 张，图片在 outputs/food/，按朝向分块：
@@ -5124,7 +5124,7 @@ const BGM = (function(){
     {src:"cosplay/cos-09.jpg", alt:"cosplay photo 09"}
   ];
 
-  /* Photography gallery: 35 photos (web-compressed copies, EXIF-rotation applied).
+  /* Photography gallery: 36 photos (web-compressed copies, EXIF-rotation applied).
      Grouped by orientation -> portraits 4 columns / landscapes 3 columns;
      every tile keeps the original aspect ratio, so nothing is cropped. */
   const PHOTO_IMAGES = [
@@ -5162,7 +5162,8 @@ const BGM = (function(){
     {src:"photography/ph-32.jpg", alt:"photography photo 32", orient:"l", w:900, h:675},
     {src:"photography/ph-33.jpg", alt:"photography photo 33", orient:"p", w:675, h:900},
     {src:"photography/ph-34.jpg", alt:"photography photo 34", orient:"p", w:675, h:900},
-    {src:"photography/ph-35.jpg", alt:"photography photo 35", orient:"p", w:675, h:900}
+    {src:"photography/ph-35.jpg", alt:"photography photo 35", orient:"p", w:675, h:900},
+    {src:"photography/ph-36.jpg", alt:"photography photo 36", orient:"p", w:675, h:900}
   ];
   /* Group layout for the photography gallery (cols = grid columns per orientation group)
      both blocks use 3 columns so every tile has the same width as the cosplay gallery and rows stay even */
@@ -5314,7 +5315,7 @@ const BGM = (function(){
         blocks:[{p:"I love the Matador from Identity V (the brown-haired one~ and the person next to him is my buddy), so I cosplayed and took a lot of photos. I can pull off both cool and cute~"}]
       }
     },
-    /* 摄影画廊：35 张，按朝向分块排版（竖图 3 列 / 横图 3 列），图片等比完整显示、不裁切；
+    /* 摄影画廊：36 张，按朝向分块排版（竖图 3 列 / 横图 3 列），图片等比完整显示、不裁切；
        配文颜色由 .gallery-prose 绑定 --cyan → 随主题变化 */
     photography:{
       "zh-CN":{
